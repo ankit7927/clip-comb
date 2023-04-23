@@ -1,0 +1,8 @@
+__pycache__
+.env
+raw
+*.mp3
+*.mp4
+*.jpeg
+*.jpg 
+*.png
