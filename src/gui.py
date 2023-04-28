@@ -1,79 +1,109 @@
 import tkinter as tk
-from tkinter import filedialog
-import sys
+from tkinter import ttk, filedialog
+from tkinter import messagebox
 
-class FactsData:
-    data:dict = {}
-    backPath:str=""
+class DataCollector:
+    data:list = []
+    backPath:str=None
+
+    title_image:str = None
+    text_image:str = None
     
     def __init__(self):
-        facts:list = []            
 
-        root = tk.Tk()
-        root.resizable(0,0)
-        root.title("Shorts Maker with python by x64-tech")
+        window = tk.Tk()
+        window.resizable(0, 0)
+        window.title("Video Editor")
 
-        titleframe = tk.LabelFrame(root, text="Title")
-        titleframe.pack(padx=10, pady=10, fill= "both")
-        
-        titleEntry = tk.Text(titleframe, width=30, height=2)
-        titleEntry.grid(row=0, column=0, padx=5, pady=10)
+        frame1 = ttk.LabelFrame(window, text="Title")
+        frame1.pack(pady=6, fill="both", padx=10)
 
-        def select_file():
-            self.data["title"] = {"text":titleEntry.get("1.0", "end-1c"), "image":filedialog.askopenfilename()}
+        video_type_var = tk.StringVar()
+        video_type_dropdown = ttk.Combobox(frame1, textvariable=video_type_var, values=["Vertical", "Horizontal"], width=20)
+        video_type_dropdown.current(0)
+        video_type_dropdown.grid(row=0, column=0, padx=5, pady=5)
+
+        title_entry = ttk.Entry(frame1, width=40)
+        title_entry.grid(row=0, column=2, padx=5, pady=5)
+
+        def select_image():
+
+            filetypes = (("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*"))
+            self.title_image = filedialog.askopenfilename(title="Select Image", filetypes=filetypes)
+
+        image_button = ttk.Button(frame1, text="Select Image", command=select_image)
+        image_button.grid(row=0, column=3, padx=5, pady=5)
+
+        def select_back():
+            filetypes = (("Video file", "*.mp4"), ("All files", "*.*"))
+            self.backPath = filedialog.askopenfilename(title="Select Background", filetypes=filetypes)
+
+
+        back_button = ttk.Button(frame1, text="Select Background", command=select_back)
+        back_button.grid(row=0, column=4, padx=5, pady=5)
+
+        table = ttk.Treeview(window, columns=("text", "image"), show="headings", selectmode="browse")
+        table.heading("text", text="Text")
+        table.heading("image", text="Image")
+        table.pack(padx=10, pady=5, fill="both")
+
+        frame2 = ttk.LabelFrame(window, text="Add Text")
+        frame2.pack(pady=6, fill="both", padx=10)
+
+        text_entry = ttk.Entry(frame2, width=50)
+        text_entry.grid(row=0, column=0, padx=5, pady=5)
+
+        def select_image_frame2():
+            filetypes = (("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*"))
+            self.text_image = filedialog.askopenfilename(title="Select Image", filetypes=filetypes)
+
+        image_button_frame2 = ttk.Button(frame2, text="Select Image", command=select_image_frame2)
+        image_button_frame2.grid(row=0, column=1, padx=5, pady=5)
+
+        def save_text():
+            text = text_entry.get()
+
+            if not text or not self.text_image:
+                messagebox.showwarning("Alert", "both text and image is required")
+                return
+            table.insert("", tk.END, values=(text, self.text_image))
+            self.text_image = None
+            text_entry.delete(0, tk.END)
+
+        save_button = ttk.Button(frame2, text="Save", command=save_text)
+        save_button.grid(row=0, column=2, padx=5, pady=5)
+
+        def delete_video():
+            selected_item = table.selection()
+            if selected_item:
+                table.delete(selected_item)
+
+        delete_button = ttk.Button(frame2, text="Delete", command=delete_video)
+        delete_button.grid(row=0, column=4, padx=5, pady=5)
+
+        def done():
+
+            if len(table.get_children()) == 0:
+                messagebox.showwarning("Alert", "No text is given")
+                return
+
+            title = title_entry.get()
+            if title == "" or self.backPath == None or self.title_image == None:
+                messagebox.showwarning("Alert", "title, image and backgroung are required")
+                return
+            self.data.insert(0, {"text":title, "image":self.title_image})
             
-        tk.Button(titleframe, text="Select Image", command=select_file).grid(row=0, column=1, padx=5, pady=5)
+            for item in table.get_children():
+                text = table.item(item, 'values')[0]
+                image = table.item(item, 'values')[1]
 
+                self.data.append({"text":text, "image":image})
+            window.destroy()
 
-        def backSet():  self.backPath = filedialog.askopenfilename()
+        done_button = ttk.Button(window, text="Done", command=done)
+        done_button.pack(pady=10, padx=10, fill="both")
 
-        selectBack= tk.Button(root, text="Select Background", 
-                               command=backSet)
-        selectBack.pack(fill="both", padx=10)
-
-        factFrame = tk.LabelFrame(root, text="Add Facts")
-        factFrame.pack(padx=10, pady=10, fill= "both") 
-        
-
-        f1 = tk.Text(factFrame, width=30, height=2)
-        f1.grid(row=0, column=0)
-        tk.Button(factFrame, text="select image", 
-                  command=lambda : facts.append({"fact":f1.get("1.0", "end-1c"), "image":filedialog.askopenfilename()})).grid(row=0, column=1, padx=5, pady=5)
-
-        f2 = tk.Text(factFrame, width=30, height=2)
-        f2.grid(row=1, column=0)
-        tk.Button(factFrame, text="select image", 
-                  command=lambda : facts.append({"fact":f2.get("1.0", "end-1c"), "image":filedialog.askopenfilename()})).grid(row=1, column=1, padx=5, pady=5)
-
-        f3 = tk.Text(factFrame, width=30, height=2)
-        f3.grid(row=2, column=0)
-        tk.Button(factFrame, text="select image", 
-                  command=lambda : facts.append({"fact":f3.get("1.0", "end-1c"), "image":filedialog.askopenfilename()})).grid(row=2, column=1, padx=5, pady=5)
-
-        f4 = tk.Text(factFrame, width=30, height=2)
-        f4.grid(row=3, column=0)
-        tk.Button(factFrame, text="select image", 
-                  command=lambda : facts.append({"fact":f4.get("1.0", "end-1c"), "image":filedialog.askopenfilename()})).grid(row=3, column=1, padx=5, pady=5)
-
-        f5 = tk.Text(factFrame, width=30, height=2)
-        f5.grid(row=4, column=0)
-        tk.Button(factFrame, text="select image", 
-                  command=lambda : facts.append({"fact":f5.get("1.0", "end-1c"), "image":filedialog.askopenfilename()})).grid(row=4, column=1, padx=5, pady=5)
-
-        def proc():
-            self.data["facts"] = facts
-            root.destroy()
-
-        contFrame = tk.Frame(root)
-        contFrame.pack(padx=10, pady=5, fill= "both")
-
-        proceedAhed= tk.Button(contFrame, text="Create Video", command=proc)
-        proceedAhed.grid(row=0, column=0, padx=5, pady=10)
-
-        exitbtn =tk.Button(contFrame, text="Exit", command=lambda:sys.exit())
-        exitbtn.grid(row=0, column=1, padx=5, pady=10)
-        
-        root.mainloop()
+        window.mainloop()
     
     def get(self):
         return (self.data, self.backPath)

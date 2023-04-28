@@ -1,6 +1,6 @@
 from .audio import GenerateAudio
 from .video import GenerateClip, GenerateFinalCLip
-from .gui import FactsData
+from .gui import DataCollector
 import os
 
 class ShortsMaker:
@@ -8,9 +8,7 @@ class ShortsMaker:
     backPath:str = ""
 
     def __init__(self) -> None:
-        #self.data, self.backPath = FactsData().get()
-        self.data = [{"text":"this is an best facts", "image":"image.jpeg"}]
-        self.backPath = "backs.mp4"
+        self.data, self.backPath = DataCollector().get()
 
         print(self.data)
         self.gen_audio()
@@ -21,8 +19,7 @@ class ShortsMaker:
         for inx, i in enumerate(self.data):
             GenerateAudio(i["text"], inx)
     
-
     def gen_final_clip(self):
         GenerateFinalCLip(len(self.data), self.data[0]["text"])
-        print("cleaning raw")
-        for f in os.listdir("src/raw"): os.remove("src/raw/"+f)
+        print("cleaning temp")
+        for f in os.listdir("src/temp"): os.remove("src/temp/"+f)
