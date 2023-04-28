@@ -4,30 +4,25 @@ from .gui import FactsData
 import os
 
 class ShortsMaker:
-    data:dict = {}
+    data:dict = []
     backPath:str = ""
 
     def __init__(self) -> None:
-        self.data, self.backPath = FactsData().get()
+        #self.data, self.backPath = FactsData().get()
+        self.data = [{"text":"this is an best facts", "image":"image.jpeg"}]
+        self.backPath = "backs.mp4"
 
         print(self.data)
         self.gen_audio()
-        self.gen_clip()
+        GenerateClip(self.data, self.backPath)
         self.gen_final_clip()
 
     def gen_audio(self):
-        GenerateAudio(self.data["title"]["text"], "title")
-        
-        for inx, i in enumerate(self.data["facts"]):
-            GenerateAudio(i["fact"], inx)
+        for inx, i in enumerate(self.data):
+            GenerateAudio(i["text"], inx)
     
-    def gen_clip(self):
-        GenerateClip(True, self.data["title"]["image"], None, None)
-
-        for inx, i in enumerate(self.data["facts"]):
-            GenerateClip(False, i["image"], inx, inx)
 
     def gen_final_clip(self):
-        GenerateFinalCLip(len(self.data["facts"]), self.backPath, self.data["title"]["text"])
+        GenerateFinalCLip(len(self.data), self.data[0]["text"])
         print("cleaning raw")
         for f in os.listdir("src/raw"): os.remove("src/raw/"+f)
