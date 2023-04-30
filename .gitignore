@@ -6,3 +6,5 @@ raw
 *.jpeg
 *.jpg 
 *.png
+*.db
+*.sqlite3

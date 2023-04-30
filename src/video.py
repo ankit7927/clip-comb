@@ -4,7 +4,7 @@ from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 
 
-font_path = "src/fonts/Poppins-Regular.ttf"
+font_path = "src/fonts/"
 
 def Background(backPath:str) -> mp.VideoClip:
     back:mp.VideoClip = mp.VideoFileClip(backPath)
@@ -17,7 +17,7 @@ def Background(backPath:str) -> mp.VideoClip:
 
     return crop(back, x1=x1, x2=x2, y1=y1, y2=y2)
 
-def GenerateClip(data:list, backpath:str):
+def GenerateClip(data:list, backpath:str, font:str):
     last_dur = 0
     for inx, i in enumerate(data):
         audio_clip = mp.AudioFileClip(f"src/temp/{inx}.mp3")
@@ -28,7 +28,7 @@ def GenerateClip(data:list, backpath:str):
         img_clip = img_clip.fx(speedx, 1.2)
         img_clip = img_clip.fx(volumex, 2)
 
-        text_clip = mp.TextClip(data[inx]["text"], font=font_path, fontsize=30, color='white', bg_color='transparent', align='center', method='caption', size=(480, None))
+        text_clip = mp.TextClip(data[inx]["text"], font=font_path+font, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=(480, None))
         text_clip = text_clip.set_position(("center",0.7), relative=True)
         
         back_clip:mp.VideoClip = Background(backPath=backpath)

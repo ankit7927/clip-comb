@@ -1,19 +1,23 @@
 from .audio import GenerateAudio
 from .video import GenerateClip, GenerateFinalCLip
-from .gui import DataCollector
-import os
+from .gui.collector import Collector
+import os, sys
 
 class ShortsMaker:
     data:dict = []
-    backPath:str = ""
 
     def __init__(self) -> None:
-        self.data, self.backPath = DataCollector().get()
+        collector = Collector()
+        self.data, backPath, font = collector.get()
+
+        if len(self.data) == 0: sys.exit(0)
 
         print(self.data)
+
         self.gen_audio()
-        GenerateClip(self.data, self.backPath)
+        GenerateClip(self.data, backPath, font)
         self.gen_final_clip()
+        collector.removeOld()
 
     def gen_audio(self):
         for inx, i in enumerate(self.data):
