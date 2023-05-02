@@ -6,69 +6,67 @@ from src.gui.bulkcollector import BulkCollector
 from src.constants import *
 
 
-class Manager:
+class Manager(tk.Tk):
     conn:sqlite3.Connection=None
     cursor:sqlite3.Cursor = None
 
     imagePath = None
     
     def __init__(self):
+        super().__init__()
         self.conn = sqlite3.connect(DB_PATH)
         self.cursor = self.conn.cursor()
 
-        self.gui()
+        self.setup_ui()
         self.conn.commit()
         self.conn.close()
 
-    def gui(self):
-        root = tk.Tk()
-        root.resizable(0, 0)
-        root.title("data collector")
+    def setup_ui(self) -> None:
+        self.resizable(0, 0)
+        self.title("data collector")
 
-        topFrame = tk.LabelFrame(root, text="Category")
+        topFrame = tk.LabelFrame(self, text="Category")
         topFrame.pack(padx=10, pady=10, fill="both")
 
 
-        list_cate = self.getCategory()
-        cate_select = ttk.Combobox(topFrame, values=list_cate, width=20)
-        if len(list_cate) != 0:   cate_select.current(0)
-        cate_select.grid(row=0, column=0, padx=5, pady=5)
+        self.list_cate = self.getCategory()
+        self.cate_select = ttk.Combobox(topFrame, values=self.list_cate, width=20)
+        if len(self.list_cate) != 0:   self.cate_select.current(0)
+        self.cate_select.grid(row=0, column=0, padx=5, pady=5)
 
-        loadCateg = tk.Button(topFrame, text="Load", command=lambda: self.loadCate(cate_select.get(), tree))
-        loadCateg.grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(topFrame, text="Load", command=self.loadCate).grid(row=0, column=1, padx=5, pady=5)
 
-        addCatBtn = tk.Button(topFrame, text="New", command=lambda: self.addCategory(root))
-        addCatBtn.grid(row=0, column=2, padx=5, pady=5)
+        tk.Button(topFrame, text="New", command= self.addCategory).grid(row=0, column=2, padx=5, pady=5)
 
-        tk.Button(topFrame, text="Delete", command=lambda: self.deleteCategory(root, cate_select.get())).grid(row=0, column=3, padx=5, pady=5)
+        tk.Button(topFrame, text="Delete", command=self.deleteCategory).grid(row=0, column=3, padx=5, pady=5)
 
-        def bulkColl() : BulkCollector(cate_select.get(), self.cursor, self.conn)
+        def bulkColl() :    BulkCollector(self.cate_select.get(), self.cursor, self.conn)
 
         tk.Button(topFrame, text="Collector", command=bulkColl).grid(row=0, column=4, padx=5, pady=5)
 
-        listFrame = tk.Frame(root)
+        listFrame = tk.Frame(self)
         listFrame.pack(fill="both")
 
-        tree = ttk.Treeview(listFrame, show="headings", selectmode="browse", columns=("id", "text"))
-        tree.pack(padx=10, pady=10, fill="both", expand=True, side=tk.LEFT)
+        self.tree = ttk.Treeview(listFrame, show="headings", selectmode="browse", columns=("id", "text"))
+        self.tree.pack(padx=10, pady=10, fill="both", expand=True, side=tk.LEFT)
 
-        tree.column("id", width=30, stretch=False, minwidth=30)
+        self.tree.column("id", width=30, stretch=False, minwidth=30)
 
-        tree.heading("id", text="Id")
+        self.tree.heading("id", text="Id")
 
-        scrollbar = ttk.Scrollbar(listFrame, orient=tk.VERTICAL, command=tree.yview)
+        scrollbar = ttk.Scrollbar(listFrame, orient=tk.VERTICAL, command=self.tree.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y, pady=10)
 
-        tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.configure(command=tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.configure(command=self.tree.yview)
 
-        self.loadCate(cate_select.get(), tree)
+        self.loadCate()
 
-        middleFrame = tk.LabelFrame(root, text="text")
+        middleFrame = tk.LabelFrame(self, text="text")
         middleFrame.pack(padx=10, pady=10, fill="both")
 
-        text_entry = tk.Entry(middleFrame, width=60)
-        text_entry.grid(row=0, column=0, padx=5, pady=5)
+        self.text_entry = tk.Entry(middleFrame, width=60)
+        self.text_entry.grid(row=0, column=0, padx=5, pady=5)
 
         def chooseimage():
             filetypes = (("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*"))
@@ -77,33 +75,33 @@ class Manager:
         imageBtn = tk.Button(middleFrame, text="Image", command=chooseimage)
         imageBtn.grid(row=0, column=1, padx=5, pady=5)
 
-        saveBtn = tk.Button(middleFrame, text="Save And Add Another", width=60, command=lambda: self.addText(cate_select.get(), tree, text_entry))
+        saveBtn = tk.Button(middleFrame, text="Save And Add Another", width=60, command=self.addText)
         saveBtn.grid(row=1, column=0, padx=5, pady=5)
 
         def delete():
-            selected_item = tree.selection()
+            selected_item = self.tree.selection()
             if selected_item:
-                cate = cate_select.get()
-                item = tree.item(selected_item, "values")
+                cate = self.cate_select.get()
+                item = self.tree.item(selected_item, "values")
                 img = self.cursor.execute(f"SELECT image from {cate} WHERE id={item[0]}").fetchone()
                 os.remove(img[0])
                 self.cursor.execute(f"DELETE FROM {cate} WHERE id={item[0]}")
                 self.conn.commit()
-                self.loadCate(cate, tree) 
+                self.loadCate() 
 
         saveBtn = tk.Button(middleFrame, text="Delete", command=delete)
         saveBtn.grid(row=1, column=1, padx=5, pady=5)
 
-        root.mainloop()
+        self.mainloop()
 
     def getCategory(self):
         tables = self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
         if tables.count(('sqlite_sequence',)) > 0:
-            table = tables.remove(('sqlite_sequence',))
+            tables.remove(('sqlite_sequence',))
         return tables
     
-    def addCategory(self, master):
-        root = tk.Toplevel(master)
+    def addCategory(self):
+        root = tk.Toplevel(self)
         root.title("Create New Category")
 
         tk.Label(root, text="Enter Category Name").pack(fill="both", padx=10, pady=10)
@@ -119,30 +117,35 @@ class Manager:
             cat = cat.replace(" ", "_")
             self.cursor.execute(f"create table {cat} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)")
             self.conn.commit()
-            master.destroy()
+            self.cate_select["values"] = self.getCategory()
+            root.destroy()
 
         tk.Button(root, text="create", command=create).pack(fill="both", padx=10, pady=10)
 
-    def deleteCategory(self, master, category):
-        res = messagebox.askyesno(f"Delete '{category}'", f"are you sure to delete '{category}' \n\ndeleting will close the appliction")
+    def deleteCategory(self):
+        category = self.cate_select.get()
+        res = messagebox.askyesno(f"Delete '{category}'", f"are you sure to delete '{category}'")
         if res:
             list_imgs = self.cursor.execute(f"SELECT image from {category}").fetchall()
             for img in list_imgs:   os.remove(img[0])
             self.cursor.execute(f"DROP TABLE {category}")
             self.conn.commit()
-            master.destroy()
+            self.cate_select["values"] = self.getCategory()
+            self.cate_select.current(0)
 
-    def loadCate(self, cate, tree):
+    def loadCate(self):
+        cate = self.cate_select.get()
         if cate != "":
-            tree.heading("text", text=cate)
-            for item in tree.get_children():    tree.delete(item)
-            texts = self.cursor.execute(f"SELECT id, text FROM {cate};").fetchall()
-            for text in texts:  tree.insert("", tk.END, values=text)
+            self.tree.heading("text", text=cate)
+            for item in self.tree.get_children():    self.tree.delete(item)
+            texts = self.cursor.execute(f"select id, text from {cate};").fetchall()
+            for text in texts:  self.tree.insert("", tk.END, values=text)
 
 
-    def addText(self, category, tree, text_entry):
-        text = text_entry.get()
-        if text_entry.get() =="" or self.imagePath == None:
+    def addText(self):
+        text = self.text_entry.get()
+        category = self.cate_select.get()
+        if self.text_entry.get() =="" or self.imagePath == None:
             messagebox.showwarning("Bad Entry", "both text and image required")
             return
         
@@ -155,7 +158,7 @@ class Manager:
         
         self.conn.commit()
 
-        tree.insert("", tk.END, values=(self.cursor.lastrowid, text))
+        self.tree.insert("", tk.END, values=(self.cursor.lastrowid, text))
 
-        text_entry.delete(0, tk.END)
+        self.text_entry.delete(0, tk.END)
         self.imagePath = None

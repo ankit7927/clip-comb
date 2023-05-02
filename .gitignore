@@ -8,3 +8,5 @@ raw
 *.png
 *.db
 *.sqlite3
+*.zip
+db
