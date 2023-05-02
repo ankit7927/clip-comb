@@ -1,7 +1,9 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter import messagebox
-import sqlite3, random, shutil
+import sqlite3, random, shutil, os
+from src.gui.bulkcollector import BulkCollector
+from src.constants import *
 
 
 class Manager:
@@ -11,7 +13,7 @@ class Manager:
     imagePath = None
     
     def __init__(self):
-        self.conn = sqlite3.connect("src/db/shorts.db")
+        self.conn = sqlite3.connect(DB_PATH)
         self.cursor = self.conn.cursor()
 
         self.gui()
@@ -32,11 +34,17 @@ class Manager:
         if len(list_cate) != 0:   cate_select.current(0)
         cate_select.grid(row=0, column=0, padx=5, pady=5)
 
-        loadCateg = tk.Button(topFrame, text="Load Category", command=lambda: self.loadCate(cate_select.get(), tree))
+        loadCateg = tk.Button(topFrame, text="Load", command=lambda: self.loadCate(cate_select.get(), tree))
         loadCateg.grid(row=0, column=1, padx=5, pady=5)
 
-        addCatBtn = tk.Button(topFrame, text="New Category", command=lambda: self.addCategory(root))
+        addCatBtn = tk.Button(topFrame, text="New", command=lambda: self.addCategory(root))
         addCatBtn.grid(row=0, column=2, padx=5, pady=5)
+
+        tk.Button(topFrame, text="Delete", command=lambda: self.deleteCategory(root, cate_select.get())).grid(row=0, column=3, padx=5, pady=5)
+
+        def bulkColl() : BulkCollector(cate_select.get(), self.cursor, self.conn)
+
+        tk.Button(topFrame, text="Collector", command=bulkColl).grid(row=0, column=4, padx=5, pady=5)
 
         listFrame = tk.Frame(root)
         listFrame.pack(fill="both")
@@ -77,6 +85,8 @@ class Manager:
             if selected_item:
                 cate = cate_select.get()
                 item = tree.item(selected_item, "values")
+                img = self.cursor.execute(f"SELECT image from {cate} WHERE id={item[0]}").fetchone()
+                os.remove(img[0])
                 self.cursor.execute(f"DELETE FROM {cate} WHERE id={item[0]}")
                 self.conn.commit()
                 self.loadCate(cate, tree) 
@@ -87,10 +97,12 @@ class Manager:
         root.mainloop()
 
     def getCategory(self):
-        return self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
-        
+        tables = self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
+        if tables.count(('sqlite_sequence',)) > 0:
+            table = tables.remove(('sqlite_sequence',))
+        return tables
+    
     def addCategory(self, master):
-
         root = tk.Toplevel(master)
         root.title("Create New Category")
 
@@ -108,9 +120,17 @@ class Manager:
             self.cursor.execute(f"create table {cat} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)")
             self.conn.commit()
             master.destroy()
-            
 
         tk.Button(root, text="create", command=create).pack(fill="both", padx=10, pady=10)
+
+    def deleteCategory(self, master, category):
+        res = messagebox.askyesno(f"Delete '{category}'", f"are you sure to delete '{category}' \n\ndeleting will close the appliction")
+        if res:
+            list_imgs = self.cursor.execute(f"SELECT image from {category}").fetchall()
+            for img in list_imgs:   os.remove(img[0])
+            self.cursor.execute(f"DROP TABLE {category}")
+            self.conn.commit()
+            master.destroy()
 
     def loadCate(self, cate, tree):
         if cate != "":
@@ -129,7 +149,7 @@ class Manager:
         imageid = random.randint(10000000, 99999999)
         imageid = str(imageid)+"."+self.imagePath.split(".")[1]
 
-        img_path = shutil.copyfile(self.imagePath, "src/db/images/"+imageid)
+        img_path = shutil.copyfile(self.imagePath, IMAGES_DIR+imageid)
         
         self.cursor.execute(f"INSERT INTO {category} VALUES(?, ?, ?)", (None, text, img_path, ))
         

@@ -2,7 +2,7 @@ import moviepy.editor as mp
 from moviepy.video.fx.crop import crop
 from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
-
+from src.constants import *
 
 font_path = "src/fonts/"
 
@@ -20,7 +20,7 @@ def Background(backPath:str) -> mp.VideoClip:
 def GenerateClip(data:list, backpath:str, font:str):
     last_dur = 0
     for inx, i in enumerate(data):
-        audio_clip = mp.AudioFileClip(f"src/temp/{inx}.mp3")
+        audio_clip = mp.AudioFileClip(AUDIO_NAME(inx))
         img_clip = mp.ImageClip(data[inx]["image"]).set_position(lambda t: ('center', 50+t))
         img_clip = img_clip.resize(height=300)
         img_clip.duration = audio_clip.duration
@@ -36,14 +36,14 @@ def GenerateClip(data:list, backpath:str, font:str):
         
         con_clip = mp.CompositeVideoClip([back_clip, img_clip, text_clip], use_bgclip=True)
         con_clip.duration = img_clip.duration
-        con_clip.write_videofile(f"src/temp/{inx}_clp.mp4")
+        con_clip.write_videofile(CLIP_NAME(inx))
         last_dur += img_clip.duration
 
 
 def GenerateFinalCLip(lenth:int, fname:str):
     clip_chunks:list = []
     for i in range(0, lenth):
-        clip_chunks.append(mp.VideoFileClip(f"src/temp/{str(i)}_clp.mp4"))
+        clip_chunks.append(mp.VideoFileClip(CLIP_NAME(str(i))))
     final_clip =  mp.concatenate_videoclips(clip_chunks, method="compose")
     
-    final_clip.write_videofile(f"{fname}.mp4", codec='libx264', audio_codec='aac')
+    final_clip.write_videofile(FINAL_CLIP_NAME(fname), codec='libx264', audio_codec='aac')

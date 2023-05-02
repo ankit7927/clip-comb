@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter import messagebox
 import sqlite3, os
-
+from src.constants import *
 
 class Collector:
     data:list = []
@@ -17,7 +17,7 @@ class Collector:
     imagePath = None
 
     def __init__(self) -> None:
-        self.conn = sqlite3.connect("src/db/shorts.db")
+        self.conn = sqlite3.connect(DB_PATH)
         self.cursor = self.conn.cursor()
 
         self.gui()
@@ -78,7 +78,7 @@ class Collector:
         backBtn = tk.Button(middleFrame, text="Background", command=select_back)
         backBtn.grid(padx=10, pady=10, row=0, column=2)
 
-        fonts = os.listdir("src/fonts")
+        fonts = os.listdir(FONTS_DIR)
         font_select = ttk.Combobox(middleFrame, values=fonts, width=40)
         font_select.current(0)
         font_select.grid(row=1, column=0, padx=10, pady=5)
@@ -96,7 +96,10 @@ class Collector:
         root.mainloop()
 
     def getCategory(self):
-        return self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
+        tables = self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
+        if tables.count(('sqlite_sequence',)) > 0:
+            tables.remove(('sqlite_sequence',))
+        return tables
     
     def loadCate(self, cate, tree):
         if cate != "":
@@ -137,6 +140,8 @@ class Collector:
     def removeOld(self):
         cate = self.removable["cate"]
         for i in self.removable["remove"]:
+            fname = self.cursor.execute(f"SELECT image FROM {cate} WHERE id={i}").fetchone()
+            os.remove(fname[0])
             self.cursor.execute(f"DELETE FROM {cate} WHERE id={i}")
         print("removed old")
         self.conn.commit()

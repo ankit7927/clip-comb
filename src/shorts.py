@@ -2,6 +2,7 @@ from .audio import GenerateAudio
 from .video import GenerateClip, GenerateFinalCLip
 from .gui.collector import Collector
 import os, sys
+from src.constants import TEMP_DIR
 
 class ShortsMaker:
     data:dict = []
@@ -26,4 +27,4 @@ class ShortsMaker:
     def gen_final_clip(self):
         GenerateFinalCLip(len(self.data), self.data[0]["text"])
         print("cleaning temp")
-        for f in os.listdir("src/temp"): os.remove("src/temp/"+f)
+        for f in os.listdir(TEMP_DIR): os.remove(TEMP_DIR+f)
