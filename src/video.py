@@ -4,7 +4,6 @@ from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 from src.constants import *
 
-font_path = "src/fonts/"
 
 def Background(backPath:str) -> mp.VideoClip:
     back:mp.VideoClip = mp.VideoFileClip(backPath)
@@ -28,7 +27,7 @@ def GenerateClip(data:list, backpath:str, font:str):
         img_clip = img_clip.fx(speedx, 1.2)
         img_clip = img_clip.fx(volumex, 2)
 
-        text_clip = mp.TextClip(data[inx]["text"], font=font_path+font, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=(480, None))
+        text_clip = mp.TextClip(data[inx]["text"], font=FONTS_DIR+font, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=(480, None))
         text_clip = text_clip.set_position(("center",0.7), relative=True)
         
         back_clip:mp.VideoClip = Background(backPath=backpath)

@@ -34,15 +34,11 @@ class Manager(tk.Tk):
         if len(self.list_cate) != 0:   self.cate_select.current(0)
         self.cate_select.grid(row=0, column=0, padx=5, pady=5)
 
-        tk.Button(topFrame, text="Load", command=self.loadCate).grid(row=0, column=1, padx=5, pady=5)
+        tk.Button(topFrame, text="Load", command=self.loadCate, width=15).grid(row=0, column=1, padx=5, pady=5)
 
-        tk.Button(topFrame, text="New", command= self.addCategory).grid(row=0, column=2, padx=5, pady=5)
+        tk.Button(topFrame, text="New", command= self.addCategory, width=15).grid(row=0, column=2, padx=5, pady=5)
 
-        tk.Button(topFrame, text="Delete", command=self.deleteCategory).grid(row=0, column=3, padx=5, pady=5)
-
-        def bulkColl() :    BulkCollector(self.cate_select.get(), self.cursor, self.conn)
-
-        tk.Button(topFrame, text="Collector", command=bulkColl).grid(row=0, column=4, padx=5, pady=5)
+        tk.Button(topFrame, text="Delete", command=self.deleteCategory, width=15).grid(row=0, column=3, padx=5, pady=5)
 
         listFrame = tk.Frame(self)
         listFrame.pack(fill="both")
@@ -65,19 +61,6 @@ class Manager(tk.Tk):
         middleFrame = tk.LabelFrame(self, text="text")
         middleFrame.pack(padx=10, pady=10, fill="both")
 
-        self.text_entry = tk.Entry(middleFrame, width=60)
-        self.text_entry.grid(row=0, column=0, padx=5, pady=5)
-
-        def chooseimage():
-            filetypes = (("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*"))
-            self.imagePath = filedialog.askopenfilename(title="Select Image", filetypes=filetypes)
-
-        imageBtn = tk.Button(middleFrame, text="Image", command=chooseimage)
-        imageBtn.grid(row=0, column=1, padx=5, pady=5)
-
-        saveBtn = tk.Button(middleFrame, text="Save And Add Another", width=60, command=self.addText)
-        saveBtn.grid(row=1, column=0, padx=5, pady=5)
-
         def delete():
             selected_item = self.tree.selection()
             if selected_item:
@@ -90,7 +73,11 @@ class Manager(tk.Tk):
                 self.loadCate() 
 
         saveBtn = tk.Button(middleFrame, text="Delete", command=delete)
-        saveBtn.grid(row=1, column=1, padx=5, pady=5)
+        saveBtn.grid(row=0, column=0, padx=5, pady=5)
+
+        def bulkColl() :    BulkCollector(self.cate_select.get(), self.cursor, self.conn)
+
+        tk.Button(middleFrame, text="Collector", command=bulkColl).grid(row=0, column=1, padx=5, pady=5)
 
         self.mainloop()
 
@@ -140,25 +127,3 @@ class Manager(tk.Tk):
             for item in self.tree.get_children():    self.tree.delete(item)
             texts = self.cursor.execute(f"select id, text from {cate};").fetchall()
             for text in texts:  self.tree.insert("", tk.END, values=text)
-
-
-    def addText(self):
-        text = self.text_entry.get()
-        category = self.cate_select.get()
-        if self.text_entry.get() =="" or self.imagePath == None:
-            messagebox.showwarning("Bad Entry", "both text and image required")
-            return
-        
-        imageid = random.randint(10000000, 99999999)
-        imageid = str(imageid)+"."+self.imagePath.split(".")[1]
-
-        img_path = shutil.copyfile(self.imagePath, IMAGES_DIR+imageid)
-        
-        self.cursor.execute(f"INSERT INTO {category} VALUES(?, ?, ?)", (None, text, img_path, ))
-        
-        self.conn.commit()
-
-        self.tree.insert("", tk.END, values=(self.cursor.lastrowid, text))
-
-        self.text_entry.delete(0, tk.END)
-        self.imagePath = None
