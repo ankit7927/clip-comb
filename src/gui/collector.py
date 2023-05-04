@@ -1,160 +1,172 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
-from tkinter import messagebox
-import sqlite3, os
+from tkinter import ttk
+import random
+import requests
 from src.constants import *
-from shutil import make_archive, unpack_archive
 
 class Collector(tk.Tk):
-    data:list = []
-    backPath:str = None
-    font:str = None
+    """A class for creating a scrollable frame for data collection and database insertion."""
 
-    removable:dict = {}
+    def __init__(self, category, cursor, conn):
+        """
+        Initialize the Collector object.
 
-    conn:sqlite3.Connection=None
-    cursor:sqlite3.Cursor = None
-
-    titlePath = None
-
-    def __init__(self) -> None:
+        Args:
+            category (str): The category for data collection.
+            cursor: The cursor object for database operations.
+            conn: The connection object for database operations.
+        """
         super().__init__()
-        self.set_ui()
+        self.cursor = cursor
+        self.conn = conn
+        self.category = category
+        self.button_entry = []
 
-    def set_ui(self) -> None:
-        self.conn = sqlite3.connect(DB_PATH)
-        self.cursor = self.conn.cursor()
+        self.setup_ui()
 
-        ###
-        self.title("Shorts Maker")
+    def setup_ui(self):
+        """
+        Set up the user interface with a scrollable frame and control buttons.
+        """
+        self.title("Scrollable Frame")
+        self.geometry("900x600")
         self.resizable(0, 0)
 
-        topFrame = tk.LabelFrame(self, text="Category")
-        topFrame.pack(padx=10, pady=10, fill="both")
-
-        self.list_cate = self.getCategory()
-        self.cate_select = ttk.Combobox(topFrame, values=self.list_cate, width=20)
-        if len(self.list_cate) != 0:   self.cate_select.current(0)
-        self.cate_select.grid(row=0, column=0, padx=5, pady=5)
-
-        tk.Button(topFrame, text="Load Category", command=self.loadCate).grid(row=0, column=1, padx=5, pady=5)
-
-        tk.Button(topFrame, text="Import", command=self.import_db).grid(row=0, column=2, padx=5, pady=5)
-
-        tk.Button(topFrame, text="Export", command=self.export).grid(row=0, column=3, padx=5, pady=5)
-
-        listFrame = tk.Frame(self)
-        listFrame.pack(fill="both")
-
-        self.tree = ttk.Treeview(listFrame, show="headings", selectmode="browse", columns=("id", "text"))
-        self.tree.pack(padx=10, pady=10, fill="both", expand=True, side=tk.LEFT)
-
-        self.tree.column("id", width=30, stretch=False, minwidth=30)
-        self.tree.heading("id", text="Id")
-
-        scrollbar = ttk.Scrollbar(listFrame, orient=tk.VERTICAL, command=self.tree.yview)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=10)
-
-        self.tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.configure(command=self.tree.yview)
-
-        self.loadCate()
-
-        middleFrame = tk.LabelFrame(self, text="Creation")
-        middleFrame.pack(padx=10, pady=10, fill="both")
-
-        self.titleEntry = tk.Entry(middleFrame, width=50)
-        self.titleEntry.grid(padx=10, pady=10, row=0, column=0)
-
-        imageBtn = tk.Button(middleFrame, text="Image", command=lambda:self.select_media(type="title"))
-        imageBtn.grid(padx=10, pady=10, row=0, column=1)
-
-        backBtn = tk.Button(middleFrame, text="Background", command=lambda:self.select_media(type="back"))
-        backBtn.grid(padx=10, pady=10, row=0, column=2)
-
-        fonts = os.listdir(FONTS_DIR)
-        self.font_select = ttk.Combobox(middleFrame, values=fonts, width=40)
-        self.font_select.current(0)
-        self.font_select.grid(row=1, column=0, padx=10, pady=5)
-
-        text_selection = [i for i in range(3, 11)]
-        self.text_count_select = ttk.Combobox(middleFrame, values=text_selection, width=10)
-        self.text_count_select.current(0)
-        self.text_count_select.grid(row=1, column=1, padx=10, pady=5)
-
-        createBtn = tk.Button(middleFrame, text="Start Creating", command=self.create)
-        createBtn.grid(padx=10, pady=5, row=1, column=2)
+        self.create_scrollable_frame()
+        self.create_control_buttons()
 
         self.mainloop()
-        self.conn.commit()
 
-    def select_media(self, type):
-            if type == "back":
-                filetypes = (("Video file", "*.mp4"), ("All files", "*.*"))
-                self.backPath = filedialog.askopenfilename(title="Select Background", filetypes=filetypes)
-            elif type == "title":
-                filetypes = (("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*"))
-                self.titlePath = filedialog.askopenfilename(title="Select Image", filetypes=filetypes)
+    def create_scrollable_frame(self):
+        """
+        Create a scrollable frame with a canvas and a frame within the canvas.
+        """
+        cframe = tk.Frame(self)
+        cframe.pack(fill="both", expand=True)
 
-    def getCategory(self):
-        tables = self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
-        if tables.count(('sqlite_sequence',)) > 0:
-            tables.remove(('sqlite_sequence',))
-        return tables
-    
-    def loadCate(self):
-        cate = self.cate_select.get()
-        if cate != "":
-            self.tree.heading("text", text=cate)
-            for item in self.tree.get_children():    self.tree.delete(item)
-            texts = self.cursor.execute(f"select id, text from {cate};").fetchall()
-            for text in texts:  self.tree.insert("", tk.END, values=text)
+        canvas = tk.Canvas(cframe)
+        canvas.pack(side="left", fill="both", expand=True)
 
-    def create(self):
-        if self.titleEntry.get() == "":
-            messagebox.showerror("Bad entry", "Title is required")
-            return
-        elif self.titlePath == None:
-            messagebox.showerror("Bad Selection", "title image required")
-            return
-        elif self.backPath == None:
-            messagebox.showerror("Bad Selection", "Background is required")
-            return
-        
-        cate = self.cate_select.get()
-        self.font = self.font_select.get()
+        scrollbar = ttk.Scrollbar(cframe, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side="right", fill="y")
 
-        self.data.insert(0, {"text":self.titleEntry.get(), "image":self.titlePath})
+        canvas.configure(yscrollcommand=scrollbar.set)
 
-        records = self.cursor.execute(f"SELECT * FROM {cate}").fetchmany(int(self.text_count_select.get()))
+        self.frame = tk.Frame(canvas)
+        canvas.create_window((0, 0), window=self.frame, anchor="nw")
 
-        self.removable= {"cate":cate, "remove":[]}
-        for rec in records:
-            self.removable["remove"].append(rec[0])
-            self.data.append({"text":rec[1], "image":rec[2]})
+        self.frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
-        self.titleEntry.delete(0, tk.END)
-        
-        self.destroy()
+    def create_control_buttons(self):
+        """
+        Create control buttons in a label frame at the bottom of the window.
+        """
+        cont = tk.LabelFrame(self, text="Control")
+        cont.pack(fill="both", padx=10, pady=10, side="bottom")
 
-    def get(self):
-        return (self.data, self.backPath, self.font)
-    
-    def removeOld(self):
-        cate = self.removable["cate"]
-        for i in self.removable["remove"]:
-            fname = self.cursor.execute(f"SELECT image FROM {cate} WHERE id={i}").fetchone()
-            os.remove(fname[0])
-            self.cursor.execute(f"DELETE FROM {cate} WHERE id={i}")
-        print("removed old")
-        self.conn.commit()
-        self.conn.close()
+        tk.Button(cont, text="Raw", command=self.add_raw).grid(row=0, column=0, padx=10, pady=10)
+        tk.Button(cont, text="Add", command=self.add_to_db).grid(row=0, column=1, padx=10, pady=10)
 
-    def export(self):
-        make_archive(ZIP_NAME, base_dir=DB_DIR, format="zip", root_dir=".")
+    def filter_text(self):
+        """
+        Filter the button_entry list based on user input in the entry fields.
 
-    def import_db(self):
-        filetypes = (("Archive file", "*.zip"), ("All files", "*.*"))
-        zipdir = filedialog.askopenfilename(title="Select Background", filetypes=filetypes)
-        if zipdir:
-            unpack_archive(zipdir, ".", "zip")
+        Returns:
+            list: A list of fetchable data (dictionaries).
+        """
+        fetchable = []
+        processed_entries = []
+
+        for index, (button, entry, text) in enumerate(self.button_entry):
+            if entry.get():
+                fetchable.append({"text": text, "img": entry.get()})
+                processed_entries.append(index)
+                button.configure(state="disabled")
+                entry.configure(state="disabled")
+
+        self.button_entry = [entry for index, entry in enumerate(self.button_entry) if index not in processed_entries]
+
+        return fetchable
+
+    def copy_to_clip(self, text):
+        """
+        Copy the given text to the clipboard.
+
+        Args:
+            text (str): The text to be copied.
+        """
+        self.clipboard_clear()
+        self.clipboard_append(text)
+
+    def add_raw(self):
+        """
+        Create a window for entering raw text and generate buttons and entry fields.
+
+        The entered raw text will be split into lines, and each line will correspond to a button and an entry field.
+        Clicking a button will copy its corresponding text to the clipboard.
+        """
+        top = tk.Toplevel(self)
+        hscroll = tk.Scrollbar(top, orient='horizontal')
+        hscroll.pack(fill="x")
+        vscroll = tk.Scrollbar(top)
+        vscroll.pack(side=tk.RIGHT, fill="y")
+        t = tk.Text(top, width=80, height=30, wrap=tk.NONE,
+                    xscrollcommand=hscroll.set,
+                    yscrollcommand=vscroll.set)
+        t.pack(fill=tk.X)
+        hscroll.config(command=t.xview)
+        vscroll.config(command=t.yview)
+
+        def get_raw():
+            """
+            Get the raw text from the text widget and generate buttons and entry fields based on the text.
+
+            Each line of the raw text will correspond to a button and an entry field in the main frame.
+            """
+            text_list = [text for text in t.get(1.0, tk.END).split("\n")]
+            self.button_entry.clear()
+            for inx, d in enumerate(text_list):
+                btn = tk.Button(self.frame, text=d, width=70, command=lambda d=d: self.copy_to_clip(d))
+                btn.grid(row=inx, column=0, padx=5, pady=10)
+
+                ent = tk.Entry(self.frame, width=32)
+                ent.grid(row=inx, column=1, padx=10, pady=10)
+
+                self.button_entry.append((btn, ent, d))
+            top.destroy()
+        tk.Button(top, text="Add", command=get_raw).pack(side=tk.BOTTOM, fill="x")
+
+    def add_to_db(self):
+        """
+        Add the filtered data to the database.
+
+        The filtered data (fetchable) will be iterated, and for each item:
+        - The text and image URL will be extracted.
+        - An image ID will be generated.
+        - The image data will be retrieved from the URL and stored in a file.
+        - An SQL INSERT statement will be executed to insert the text, image filename, and None value into the database.
+        """
+        fetchable = self.filter_text()
+
+        for data in fetchable:
+            text = data["text"]
+            image_url = data["img"]
+            ext = image_url.split(".")[-1]
+            image_id = str(random.randint(10000000, 99999999))
+            filename = IMAGES_DIR + image_id + "." + ext
+
+            try:
+                response = requests.get(image_url)
+                response.raise_for_status()
+
+                with open(filename, "wb") as file:
+                    file.write(response.content)
+
+                query = f"INSERT INTO {self.category} VALUES (?, ?, ?)"
+                self.cursor.execute(query, (None, text, filename))
+                self.conn.commit()
+
+            except requests.exceptions.RequestException as e:
+                print("Error: Failed to download image:", e)
+            except Exception as e:
+                print("Error:", e)
