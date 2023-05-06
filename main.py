@@ -12,8 +12,5 @@ def prepare():
         os.mkdir(IMAGES_DIR)
 
 if __name__ == "__main__":
-    arglen = len(sys.argv)
     prepare()
-    if arglen == 2 and sys.argv[1] == "-m":
-        Manager()
-    else:   ShortsMaker()
+    ShortsMaker()

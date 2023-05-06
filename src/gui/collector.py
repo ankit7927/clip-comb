@@ -5,7 +5,7 @@ import requests
 from src.constants import *
 
 class Collector(tk.Tk):
-    """A class for creating a scrollable frame for data collection and database insertion."""
+    """A class for creating a Raw Text Collector for data collection and database insertion."""
 
     def __init__(self, category, cursor, conn):
         """
@@ -26,9 +26,9 @@ class Collector(tk.Tk):
 
     def setup_ui(self):
         """
-        Set up the user interface with a scrollable frame and control buttons.
+        Set up the user interface with a Raw Text Collector and control buttons.
         """
-        self.title("Scrollable Frame")
+        self.title("Raw Text Collector")
         self.geometry("900x600")
         self.resizable(0, 0)
 
@@ -39,7 +39,7 @@ class Collector(tk.Tk):
 
     def create_scrollable_frame(self):
         """
-        Create a scrollable frame with a canvas and a frame within the canvas.
+        Create a Raw Text Collector with a canvas and a frame within the canvas.
         """
         cframe = tk.Frame(self)
         cframe.pack(fill="both", expand=True)

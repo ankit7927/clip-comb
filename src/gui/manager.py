@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from tkinter import messagebox
-import sqlite3, os, random, requests
+import sqlite3, os, random, requests, shutil, sys
 from src.constants import *
 from shutil import make_archive, unpack_archive
 from src.gui.collector import Collector
@@ -107,6 +107,7 @@ class Manager(tk.Tk):
 
         self.mainloop()
         self.conn.commit()
+        
 
         
     def select_media(self, type):
@@ -136,6 +137,8 @@ class Manager(tk.Tk):
             list: A list of category names.
         """
         tables = self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
+        if len(tables) == 0:
+            return ["#None"]
         if tables.count(('sqlite_sequence',)) > 0:
             tables.remove(('sqlite_sequence',))
         return [table[0] for table in tables]
@@ -147,6 +150,8 @@ class Manager(tk.Tk):
         Args:
             cate (str): The name of the selected category.
         """
+        if cate == "#None":
+            return
         self.cate = cate
         if cate != "":
             self.tree.heading("text", text=cate)
@@ -268,8 +273,11 @@ class Manager(tk.Tk):
             os.remove(fname[0])
             self.cursor.execute(f"DELETE FROM {self.cate} WHERE id={i}")
         print("removed old")
-        self.conn.commit()
-        self.conn.close()
+        try:
+            self.conn.commit()
+            self.conn.close()
+        except Exception as e:
+            print(e)
 
     def export(self):
         """
@@ -286,8 +294,10 @@ class Manager(tk.Tk):
         zipdir = filedialog.askopenfilename(title="Select Background", filetypes=filetypes)
         if zipdir:
             if os.path.isdir(DB_DIR):
-                os.rmdir(DB_DIR)
+                self.conn.close()
+                shutil.rmtree(DB_DIR)
             unpack_archive(zipdir, ".", "zip")
+            sys.exit(0)
 
 
     def addCategory(self):
