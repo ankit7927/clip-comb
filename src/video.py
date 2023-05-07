@@ -36,7 +36,7 @@ def GenerateClip(data:list, backpath:str, font:str):
             
             con_clip = mp.CompositeVideoClip([back_clip, img_clip, text_clip], use_bgclip=True)
             con_clip.duration = img_clip.duration
-            con_clip.write_videofile(CLIP_NAME(inx), codec='libx264', audio_codec='aac')
+            con_clip.write_videofile(CLIP_NAME(inx))
             last_dur += img_clip.duration
         except Exception as e:
             print(e)
@@ -47,4 +47,4 @@ def GenerateFinalCLip(lenth:int, fname:str):
         clip_chunks.append(mp.VideoFileClip(CLIP_NAME(str(i))))
     final_clip =  mp.concatenate_videoclips(clip_chunks, method="compose")
     
-    final_clip.write_videofile(FINAL_CLIP_NAME(fname), codec='libx264', audio_codec='aac')
+    final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]), codec='libx264', audio_codec='aac')

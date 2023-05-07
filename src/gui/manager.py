@@ -23,6 +23,7 @@ class Manager(tk.Tk):
     cursor: sqlite3.Cursor = None
 
     cate: str = None
+    heading:bool = True
 
     def __init__(self) -> None:
         super().__init__()
@@ -61,32 +62,41 @@ class Manager(tk.Tk):
 
         options =  self.getCategory()
         option_var = tk.StringVar(self)
-        option_var.set("Select Category")
+        option_var.set("Category")
 
         option_menu = tk.OptionMenu(middleFrame, option_var, command=lambda e:self.loadCate(e), *options)
-        option_menu.grid(padx=10, pady=10, row=0, column=0)
+        option_menu.grid(padx=5, pady=10, row=0, column=0)
 
-        self.titleEntry = tk.Entry(middleFrame, width=72)
-        self.titleEntry.grid(padx=10, pady=10, row=0, column=1, columnspan=4)
+        self.titleEntry = tk.Entry(middleFrame, width=77)
+        self.titleEntry.grid(padx=5, pady=10, row=0, column=1, columnspan=5)
 
         imageBtn = tk.Button(middleFrame, text="Title Image", command=lambda:self.select_media(type="title"))
-        imageBtn.grid(padx=10, pady=10, row=1, column=0)
+        imageBtn.grid(padx=5, pady=10, row=1, column=0)
 
         backBtn = tk.Button(middleFrame, text="Background", command=lambda:self.select_media(type="back"))
-        backBtn.grid(padx=10, pady=10, row=1, column=1)
+        backBtn.grid(padx=5, pady=10, row=1, column=1)
 
         fonts = os.listdir(FONTS_DIR)
-        self.font_select = ttk.Combobox(middleFrame, values=fonts, width=30)
+        self.font_select = ttk.Combobox(middleFrame, values=fonts, width=20)
         self.font_select.current(0)
-        self.font_select.grid(row=1, column=2, padx=10, pady=5)
+        self.font_select.grid(row=1, column=2, padx=5, pady=5)
 
-        text_selection = [i for i in range(3, 11)]
+        text_selection = [i for i in range(1, 8)]
         self.text_count_select = ttk.Combobox(middleFrame, values=text_selection, width=8)
         self.text_count_select.current(0)
-        self.text_count_select.grid(row=1, column=3, padx=10, pady=5)
+        self.text_count_select.grid(row=1, column=3, padx=5, pady=5)
+
+        def switch_callback():
+            if switch_var.get() == 1: self.heading = True 
+            else:   self.heading = False 
+
+        switch_var = tk.IntVar()
+        switch_var.set(1)
+        switch = tk.Checkbutton(middleFrame, text="Include Title", variable=switch_var, command=switch_callback)
+        switch.grid(padx=5, pady=5, row=1, column=4)
 
         createBtn = tk.Button(middleFrame, text="Start Creating", command=self.create)
-        createBtn.grid(padx=10, pady=5, row=1, column=4)
+        createBtn.grid(padx=5, pady=5, row=1, column=5)
 
 
         listFrame = tk.Frame(self)
@@ -142,7 +152,7 @@ class Manager(tk.Tk):
         if tables.count(('sqlite_sequence',)) > 0:
             tables.remove(('sqlite_sequence',))
         return [table[0] for table in tables]
-    
+
     def loadCate(self, cate):
         """
         Load and display the texts associated with the selected category.
@@ -168,19 +178,21 @@ class Manager(tk.Tk):
         if self.cate == None:
             messagebox.showerror("Bad Selection", "Category is required")
             return
-        elif self.titleEntry.get() == "":
-            messagebox.showerror("Bad entry", "Title is required")
-            return
-        elif self.titlePath == None:
-            messagebox.showerror("Bad Selection", "title image required")
-            return
         elif self.backPath == None:
             messagebox.showerror("Bad Selection", "Background is required")
             return
-        
-        self.font = self.font_select.get()
 
-        self.data.insert(0, {"text":self.titleEntry.get(), "image":self.titlePath})
+        if self.heading:
+            if self.titleEntry.get() == "":
+                messagebox.showerror("Bad entry", "Title is required")
+                return
+            elif self.titlePath == None:
+                messagebox.showerror("Bad Selection", "Title image required")
+                return
+
+            self.data.insert(0, {"text":self.titleEntry.get(), "image":self.titlePath})
+
+        self.font = self.font_select.get()
 
         text_sele = self.text_count_select.get().split(",")
 
