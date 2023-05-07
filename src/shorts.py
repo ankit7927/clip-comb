@@ -10,9 +10,7 @@ class ShortsMaker:
     def __init__(self) -> None:
         manager = Manager()
         self.data, backPath, font = manager.get()
-
-        if len(self.data) == 0: sys.exit(0)
-
+        
         print(self.data)
 
         self.gen_audio()

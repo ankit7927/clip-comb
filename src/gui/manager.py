@@ -219,6 +219,7 @@ class Manager(tk.Tk):
         Returns:
             tuple: A tuple containing the created short, background path, and selected font.
         """
+        if len(self.data) == 0: sys.exit(0)
         return (self.data, self.backPath, self.font)
 
     def delete_item(self):
