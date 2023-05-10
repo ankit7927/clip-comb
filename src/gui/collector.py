@@ -126,11 +126,14 @@ class Collector(tk.Tk):
             text_list = [text for text in t.get(1.0, tk.END).split("\n")]
             self.button_entry.clear()
             for inx, d in enumerate(text_list):
-                btn = tk.Button(self.frame, text=d, width=70, command=lambda d=d: self.copy_to_clip(d))
-                btn.grid(row=inx, column=0, padx=5, pady=10)
+                tempFrame = tk.Frame(self.frame)
+                tempFrame.pack(padx=10, pady=10, expand=True)
 
-                ent = tk.Entry(self.frame, width=32)
-                ent.grid(row=inx, column=1, padx=10, pady=10)
+                btn = tk.Button(tempFrame, text=d, command=lambda d=d: self.copy_to_clip(d), width=100)
+                btn.pack(padx=10, pady=5)
+
+                ent = tk.Entry(tempFrame)
+                ent.pack(padx=10, pady=5, fill="x")
 
                 self.button_entry.append((btn, ent, d))
             top.destroy()

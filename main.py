@@ -1,7 +1,7 @@
 import os, sys
 from src.shorts import ShortsMaker
 from src.gui.manager import Manager
-from src.constants import TEMP_DIR, IMAGES_DIR, DB_DIR
+from src.constants import *
 
 def prepare():
     if not os.path.isdir(TEMP_DIR):
@@ -10,6 +10,8 @@ def prepare():
         os.mkdir(DB_DIR)
     if not os.path.isdir(IMAGES_DIR):
         os.mkdir(IMAGES_DIR)
+    if not os.path.isdir(OUTPUT_DIR):
+        os.mkdir(OUTPUT_DIR)
 
 if __name__ == "__main__":
     prepare()

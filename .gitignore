@@ -10,3 +10,5 @@ raw
 *.sqlite3
 *.zip
 db
+output
+temp

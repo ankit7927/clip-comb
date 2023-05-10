@@ -36,13 +36,13 @@ class Manager(tk.Tk):
         self.conn = sqlite3.connect(DB_PATH)
         self.cursor = self.conn.cursor()
 
-        self.title("Shorts Maker")
+        self.title(APP_NAME)
         self.resizable(0, 0)
 
         menubar = tk.Menu(self)
 
         cate_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="category", menu=cate_menu)
+        menubar.add_cascade(label="Category", menu=cate_menu)
 
         cate_menu.add_command(label="New", command=self.addCategory)
         cate_menu.add_command(label="Delete", command=self.deleteCategory)
@@ -51,52 +51,60 @@ class Manager(tk.Tk):
         cate_menu.add_command(label="Export", command=self.export)
 
         manager_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_command(label="collector", command=self.opencollector)
-
-        manager_menu.add_command(label="Collector")
+        menubar.add_command(label="Collector", command=self.opencollector)
 
         self.config(menu=menubar)
 
         middleFrame = tk.LabelFrame(self, text="Creation")
-        middleFrame.pack(padx=10, pady=10, fill="both")
+        middleFrame.pack(padx=10, pady=5, fill="both")
 
-        options =  self.getCategory()
-        option_var = tk.StringVar(self)
-        option_var.set("Category")
+        categories =  self.getCategory()
+        category_var = tk.StringVar(self)
+        category_var.set("Category")
 
-        option_menu = tk.OptionMenu(middleFrame, option_var, command=lambda e:self.loadCate(e), *options)
-        option_menu.grid(padx=5, pady=10, row=0, column=0)
+        category_menu = tk.OptionMenu(middleFrame, category_var, command=lambda e:self.loadCate(e), *categories)
+        category_menu.config(width=15)
+        category_menu.grid(padx=5, pady=5, row=0, column=0)
 
-        self.titleEntry = tk.Entry(middleFrame, width=77)
-        self.titleEntry.grid(padx=5, pady=10, row=0, column=1, columnspan=5)
+        orient = ("Vertical", "Horizontal")
+        orient_var = tk.StringVar(self)
+        orient_var.set(orient[0])
+        video_ori = tk.OptionMenu(middleFrame, orient_var, *orient)
+        video_ori.config(width=10)
+        video_ori.grid(padx=5, pady=5, row=0, column=1)
 
-        imageBtn = tk.Button(middleFrame, text="Title Image", command=lambda:self.select_media(type="title"))
-        imageBtn.grid(padx=5, pady=10, row=1, column=0)
-
-        backBtn = tk.Button(middleFrame, text="Background", command=lambda:self.select_media(type="back"))
-        backBtn.grid(padx=5, pady=10, row=1, column=1)
-
-        fonts = os.listdir(FONTS_DIR)
-        self.font_select = ttk.Combobox(middleFrame, values=fonts, width=20)
-        self.font_select.current(0)
-        self.font_select.grid(row=1, column=2, padx=5, pady=5)
-
-        text_selection = [i for i in range(1, 8)]
-        self.text_count_select = ttk.Combobox(middleFrame, values=text_selection, width=8)
-        self.text_count_select.current(0)
-        self.text_count_select.grid(row=1, column=3, padx=5, pady=5)
+        fonts = [font.replace(".ttf", "") for font in os.listdir(FONTS_DIR)]
+        self.font_var = tk.StringVar(self)
+        self.font_var.set(fonts[1])
+        font_select = tk.OptionMenu(middleFrame, self.font_var, *fonts)
+        font_select.config(width=15)
+        font_select.grid(row=0, column=2, padx=5, pady=5)
 
         def switch_callback():
             if switch_var.get() == 1: self.heading = True 
-            else:   self.heading = False 
+            else:   self.heading = False
 
         switch_var = tk.IntVar()
         switch_var.set(1)
         switch = tk.Checkbutton(middleFrame, text="Include Title", variable=switch_var, command=switch_callback)
-        switch.grid(padx=5, pady=5, row=1, column=4)
+        switch.grid(padx=5, pady=5, row=0, column=3)
 
-        createBtn = tk.Button(middleFrame, text="Start Creating", command=self.create)
-        createBtn.grid(padx=5, pady=5, row=1, column=5)
+        self.titleEntry = tk.Entry(middleFrame, width=77)
+        self.titleEntry.grid(padx=10, pady=5, row=1, column=0, columnspan=4)
+
+        imageBtn = tk.Button(middleFrame, text="Title Image", command=lambda:self.select_media(type="title"), width=15)
+        imageBtn.grid(padx=5, pady=5, row=2, column=0)
+
+        backBtn = tk.Button(middleFrame, text="Background", command=lambda:self.select_media(type="back"), width=15)
+        backBtn.grid(padx=5, pady=5, row=2, column=1)
+
+        text_selection = [i for i in range(1, 8)]
+        self.text_count_select = ttk.Combobox(middleFrame, values=text_selection, width=15)
+        self.text_count_select.current(0)
+        self.text_count_select.grid(row=2, column=2, padx=5, pady=5)
+
+        createBtn = tk.Button(middleFrame, text="Start Creating", command=self.create, width=15)
+        createBtn.grid(padx=5, pady=5, row=2, column=3)
 
 
         listFrame = tk.Frame(self)
@@ -105,7 +113,7 @@ class Manager(tk.Tk):
         self.tree = ttk.Treeview(listFrame, show="headings", selectmode="browse", columns=("id", "text"), height=15)
         self.tree.pack(padx=10, fill="both", expand=True, side=tk.LEFT)
 
-        self.tree.column("id", width=30, stretch=False, minwidth=30)
+        self.tree.column("id", width=40, stretch=False, minwidth=40)
         self.tree.heading("id", text="Id")
 
         bottomframe = tk.LabelFrame(self, text="Text")
@@ -131,10 +139,10 @@ class Manager(tk.Tk):
             NotImplementedError: If the media file type is not supported.
         """
         if type == "back":
-            filetypes = (("Video file", "*.mp4"), ("All files", "*.*"))
+            filetypes = (VIDEO_FILE_TUP, ALL_FILES_TUP)
             self.backPath = filedialog.askopenfilename(title="Select Background", filetypes=filetypes)
         elif type == "title":
-            filetypes = (("Image files", "*.png *.jpg *.jpeg"), ("All files", "*.*"))
+            filetypes = (IMAGE_FILE_TUP, ALL_FILES_TUP)
             self.titlePath = filedialog.askopenfilename(title="Select Image", filetypes=filetypes)
         else:
             raise NotImplementedError(f"Unsupported media type: {type}")
@@ -146,11 +154,11 @@ class Manager(tk.Tk):
         Returns:
             list: A list of category names.
         """
-        tables = self.cursor.execute("select name from sqlite_master where type='table';").fetchall()
+        tables = self.cursor.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
-        if tables.count(('sqlite_sequence',)) > 0:
-            tables.remove(('sqlite_sequence',))
+        if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
+            tables.remove((SEQUENCE_TABLE_NAME,))
         return [table[0] for table in tables]
 
     def loadCate(self, cate):
@@ -167,7 +175,7 @@ class Manager(tk.Tk):
             self.tree.heading("text", text=cate)
             for item in self.tree.get_children():
                 self.tree.delete(item)
-            texts = self.cursor.execute(f"select id, text from {cate};").fetchall()
+            texts = self.cursor.execute(TEXT_ID_FROM_CATEGORY(cate)).fetchall()
             for text in texts:
                 self.tree.insert("", tk.END, values=text)
 
@@ -192,14 +200,14 @@ class Manager(tk.Tk):
 
             self.data.insert(0, {"text":self.titleEntry.get(), "image":self.titlePath})
 
-        self.font = self.font_select.get()
+        self.font = self.font_var.get()+".ttf"
 
         text_sele = self.text_count_select.get().split(",")
 
         if len(text_sele) != 1:
             for i in text_sele:
                 try:
-                    rec = self.cursor.execute(f"SELECT * FROM {self.cate} WHERE id={i}").fetchone()
+                    rec = self.cursor.execute(f"").fetchone()
                     self.data.append({"text":rec[1], "image":rec[2]})
                 except Exception as e:  print(e)
             self.removable= text_sele
