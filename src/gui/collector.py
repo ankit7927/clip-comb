@@ -165,8 +165,7 @@ class Collector(tk.Tk):
                 with open(filename, "wb") as file:
                     file.write(response.content)
 
-                query = f"INSERT INTO {self.category} VALUES (?, ?, ?)"
-                self.cursor.execute(query, (None, text, filename))
+                self.cursor.execute(INSERT_TEXT_IMAGE(self.category), (None, text, filename))
                 self.conn.commit()
 
             except requests.exceptions.RequestException as e:

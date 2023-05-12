@@ -73,7 +73,7 @@ class Manager(tk.Tk):
         video_ori.config(width=10)
         video_ori.grid(padx=5, pady=5, row=0, column=1)
 
-        fonts = [font.replace(".ttf", "") for font in os.listdir(FONTS_DIR)]
+        fonts = os.listdir(FONTS_DIR)
         self.font_var = tk.StringVar(self)
         self.font_var.set(fonts[1])
         font_select = tk.OptionMenu(middleFrame, self.font_var, *fonts)
@@ -200,7 +200,7 @@ class Manager(tk.Tk):
 
             self.data.insert(0, {"text":self.titleEntry.get(), "image":self.titlePath})
 
-        self.font = self.font_var.get()+".ttf"
+        self.font = self.font_var.get()
 
         text_sele = self.text_count_select.get().split(",")
 
@@ -237,9 +237,9 @@ class Manager(tk.Tk):
         selected_item = self.tree.selection()
         if selected_item:
             item = self.tree.item(selected_item, "values")
-            img = self.cursor.execute(f"SELECT image from {self.cate} WHERE id={item[0]}").fetchone()
+            img = self.cursor.execute(IMAGE_WITH_ID(self.cate, item[0])).fetchone()
             os.remove(img[0])
-            self.cursor.execute(f"DELETE FROM {self.cate} WHERE id={item[0]}")
+            self.cursor.execute(DELETE_ROW(self.cate, item[0]))
             self.conn.commit()
             self.loadCate(self.cate)
     
@@ -250,7 +250,7 @@ class Manager(tk.Tk):
         selected_item = self.tree.selection()
         if selected_item:
             itemID = self.tree.item(selected_item, "values")[0]
-            item = self.cursor.execute(f"SELECT * from {self.cate} WHERE id={itemID}").fetchone()
+            item = self.cursor.execute(TEXT_SELECTION_QUERY(self.cate, itemID)).fetchone()
 
             def update():
                 if text_entry.get() == "" or img_link.get() == "":
@@ -267,7 +267,7 @@ class Manager(tk.Tk):
                     img_data = requests.get(img_link.get()).content
                     with open(filename, "wb") as file:
                         file.write(img_data)
-                    self.cursor.execute(f"UPDATE {self.cate} SET text=?, image=? WHERE id={item[0]}", (text, filename, ))
+                    self.cursor.execute(UPDATE_ROW(self.cate), (text, filename, item[0], ))
                     self.conn.commit()
                 except Exception as e:
                     raise(e)
@@ -290,9 +290,9 @@ class Manager(tk.Tk):
         Remove the old texts and associated images from the database
         """
         for i in self.removable:
-            fname = self.cursor.execute(f"SELECT image FROM {self.cate} WHERE id={i}").fetchone()
+            fname = self.cursor.execute(IMAGE_WITH_ID(self.cate, i)).fetchone()
             os.remove(fname[0])
-            self.cursor.execute(f"DELETE FROM {self.cate} WHERE id={i}")
+            self.cursor.execute(DELETE_ROW(self.cate, i))
         print("removed old")
         try:
             self.conn.commit()
@@ -311,7 +311,7 @@ class Manager(tk.Tk):
         """
         Import a SQLite database from a ZIP archive.
         """
-        filetypes = (("Archive file", "*.zip"), ("All files", "*.*"))
+        filetypes = (ARCHIVE_FILE_TUP, ALL_FILES_TUP)
         zipdir = filedialog.askopenfilename(title="Select Background", filetypes=filetypes)
         if zipdir:
             if os.path.isdir(DB_DIR):
@@ -336,7 +336,7 @@ class Manager(tk.Tk):
                 messagebox.showerror("Bad name", "name should be not empty")
                 return
             cat = cat.replace(" ", "_")
-            self.cursor.execute(f"create table {cat} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)")
+            self.cursor.execute(CREATE_TABLE(cat))
             self.conn.commit()
             root.destroy()
             self.quit()
@@ -349,9 +349,9 @@ class Manager(tk.Tk):
             res = messagebox.askyesno(f"Delete '{self.cate}'", f"are you sure to delete '{self.cate}'")
             if res:
                 try:
-                    list_imgs = self.cursor.execute(f"SELECT image from {self.cate}").fetchall()
+                    list_imgs = self.cursor.execute(ALL_IMAGE(self.cate)).fetchall()
                     for img in list_imgs:   os.remove(img[0])
-                    self.cursor.execute(f"DROP TABLE {self.cate}")
+                    self.cursor.execute(DROP_TABLE(self.cate))
                     self.conn.commit()
                     self.quit()
                 except Exception as e:
