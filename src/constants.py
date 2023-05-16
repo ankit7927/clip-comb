@@ -11,6 +11,8 @@ OUTPUT_DIR="output/"
 
 HOR_IMAGE_POS=("center", 85)
 VER_IMAGE_POS=("center", 50)
+HOR_IMAGE_HEIGHT=550
+VER_IMAGE_HEIGHT=300
 HOR_TEXT_POS = ("center", 0.65)
 VER_TEXT_POS = ("center", 0.4)
 HOR_TEXT_SIZE = (1380, None)
@@ -26,7 +28,7 @@ IMAGE_FILE_TUP = ("Image files", "*.png *.jpg *.jpeg")
 ARCHIVE_FILE_TUP = ("Archive file", "*.zip")
 
 CREATE_TABLE = lambda cate : f"create table {cate} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)"
-ALL_TABLE_QUERY = """select name from sqlite_master where type='table'"""
+ALL_TABLE_QUERY = "select name from sqlite_master where type='table'"
 SEQUENCE_TABLE_NAME = "sqlite_sequence"
 INSERT_TEXT_IMAGE = lambda cate : f"INSERT INTO {cate} VALUES (?, ?, ?)"
 TEXT_ID_FROM_CATEGORY = lambda cate : f"select id, text from {cate}"

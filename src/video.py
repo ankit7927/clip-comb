@@ -4,35 +4,50 @@ from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 from src.constants import *
 
-
-def Background(backPath:str) -> mp.VideoClip:
+def Back16x9(backPath:str) -> mp.VideoClip:
+    """Crop Horizontal Background Clip"""
     back:mp.VideoClip = mp.VideoFileClip(backPath)
+
+    width = back.size[0]
+    height = int(width * 9 / 16)
+    y_offset = int((back.size[1] - height) / 2)
+
+    return crop(back, x1=0, y1=y_offset, x2=width, y2=y_offset + height)
+
+def Back9x16(backPath:str) -> mp.VideoClip:
+    """Crop Vertical Background Clip"""
+    back:mp.VideoClip = mp.VideoFileClip(backPath)
+
+    height = back.size[1]
+    width = int(height * 9 / 16)
+    x_offset = int((back.size[0] - width) / 2)
+
+    return crop(back, x1=x_offset, y1=0, x2=x_offset + width, y2=height)
+
+def GenerateClip(data:list, backpath:str, font:str, vert:bool):
+    IMAGE_POS = VER_IMAGE_POS if vert else HOR_IMAGE_POS
+    IMAGE_HEIGHT = VER_IMAGE_HEIGHT if vert else HOR_IMAGE_HEIGHT
+    TEXT_POS = VER_TEXT_POS if vert else HOR_TEXT_POS
+    TEXT_SIZE = VER_TEXT_SIZE if vert else HOR_TEXT_SIZE
+
+    if vert: back_clip:mp.VideoClip = Back9x16(backPath=backpath)
+    else : back_clip:mp.VideoClip = Back16x9(backPath=backpath)
     
-    (w, h) = back.size
-    crpwidth = h * 9/16
-
-    x1, x2 = (w-crpwidth)//2, (w+crpwidth)//2
-    y1, y2 = 0, h
-
-    return crop(back, x1=x1, x2=x2, y1=y1, y2=y2)
-
-def GenerateClip(data:list, backpath:str, font:str):
     last_dur = 0
     for inx in range(len(data)):
         try:
             audio_clip = mp.AudioFileClip(AUDIO_NAME(inx))
             
-            img_clip = mp.ImageClip(data[inx]["image"]).set_position(lambda t: ('center', 50+t))
-            img_clip = img_clip.resize(height=300)
+            img_clip = mp.ImageClip(data[inx]["image"]).set_position(IMAGE_POS)
+            img_clip = img_clip.resize(height=IMAGE_HEIGHT)
             img_clip.duration = audio_clip.duration
             img_clip = img_clip.set_audio(audio_clip)
             img_clip = img_clip.fx(speedx, 1.2)
             img_clip = img_clip.fx(volumex, 2)
 
-            text_clip = mp.TextClip(data[inx]["text"], font=FONTS_DIR+font, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=(480, None))
-            text_clip = text_clip.set_position(("center",0.4), relative=True)
+            text_clip = mp.TextClip(data[inx]["text"], font=FONTS_DIR+font, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
+            text_clip = text_clip.set_position(TEXT_POS, relative=True)
             
-            back_clip:mp.VideoClip = Background(backPath=backpath)
             back_clip = back_clip.subclip(last_dur, img_clip.duration)
             
             con_clip = mp.CompositeVideoClip([back_clip, img_clip, text_clip], use_bgclip=True)
