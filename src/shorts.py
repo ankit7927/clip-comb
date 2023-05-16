@@ -1,7 +1,7 @@
 from .audio import GenerateAudio
 from .video import GenerateClip, GenerateFinalCLip
 from src.gui.manager import Manager
-import os, sys
+import os
 from src.constants import TEMP_DIR
 
 class ShortsMaker:
@@ -20,6 +20,7 @@ class ShortsMaker:
 
     def gen_audio(self):
         for inx, i in enumerate(self.data):
+            print(f"Fetching Audio {inx}")
             GenerateAudio(i["text"], inx)
     
     def gen_final_clip(self):

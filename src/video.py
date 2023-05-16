@@ -18,9 +18,10 @@ def Background(backPath:str) -> mp.VideoClip:
 
 def GenerateClip(data:list, backpath:str, font:str):
     last_dur = 0
-    for inx, i in enumerate(data):
+    for inx in range(len(data)):
         try:
             audio_clip = mp.AudioFileClip(AUDIO_NAME(inx))
+            
             img_clip = mp.ImageClip(data[inx]["image"]).set_position(lambda t: ('center', 50+t))
             img_clip = img_clip.resize(height=300)
             img_clip.duration = audio_clip.duration

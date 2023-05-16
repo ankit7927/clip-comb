@@ -9,6 +9,13 @@ TEMP_DIR="temp/"
 ZIP_NAME="db"
 OUTPUT_DIR="output/"
 
+HOR_IMAGE_POS=("center", 85)
+VER_IMAGE_POS=("center", 50)
+HOR_TEXT_POS = ("center", 0.65)
+VER_TEXT_POS = ("center", 0.4)
+HOR_TEXT_SIZE = (1380, None)
+VER_TEXT_SIZE = (480, None)
+
 AUDIO_NAME=lambda fname : f"{TEMP_DIR}{fname}.mp3"
 CLIP_NAME=lambda fname : f"{TEMP_DIR}{fname}_clp.mp4"
 FINAL_CLIP_NAME=lambda fname: f"{OUTPUT_DIR}{fname}.mp4"

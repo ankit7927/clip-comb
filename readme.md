@@ -13,6 +13,7 @@ sudo apt install ImageMagick
 some configurations in "image magick"
 
 ```bash
+sudo apt install python3-tk
 sudo nano etc/ImageMagick-6/policy.xml
 ```
 
