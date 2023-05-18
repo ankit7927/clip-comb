@@ -24,7 +24,7 @@ def Back9x16(backPath:str) -> mp.VideoClip:
 
     return crop(back, x1=x_offset, y1=0, x2=x_offset + width, y2=height)
 
-def GenerateClip(data:list, backpath:str, font:str, vert:bool):
+def GenerateClip(data:list, backpath:str, vert:bool):
     IMAGE_POS = VER_IMAGE_POS if vert else HOR_IMAGE_POS
     IMAGE_HEIGHT = VER_IMAGE_HEIGHT if vert else HOR_IMAGE_HEIGHT
     TEXT_POS = VER_TEXT_POS if vert else HOR_TEXT_POS
@@ -45,7 +45,7 @@ def GenerateClip(data:list, backpath:str, font:str, vert:bool):
             img_clip = img_clip.fx(speedx, 1.2)
             img_clip = img_clip.fx(volumex, 2)
 
-            text_clip = mp.TextClip(data[inx]["text"], font=FONTS_DIR+font, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
+            text_clip = mp.TextClip(data[inx]["text"], font=FONT_PATH, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
             text_clip = text_clip.set_position(TEXT_POS, relative=True)
             
             back_clip = back_clip.subclip(last_dur, img_clip.duration)

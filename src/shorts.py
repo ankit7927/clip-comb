@@ -9,12 +9,12 @@ class ShortsMaker:
 
     def __init__(self) -> None:
         manager = Manager()
-        self.data, backPath, font = manager.get()
+        self.data, backPath, vert = manager.get()
         
         print(self.data)
 
         self.gen_audio()
-        GenerateClip(self.data, backPath, font)
+        GenerateClip(self.data, backPath, vert)
         self.gen_final_clip()
         manager.removeOld()
 

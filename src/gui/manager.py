@@ -15,7 +15,8 @@ class Manager(tk.Tk):
     """
     data: list = []
     backPath: str = None
-    font: str = None
+    vert: bool = True
+    delete: bool = True
 
     removable: list = []
 
@@ -50,7 +51,6 @@ class Manager(tk.Tk):
         cate_menu.add_command(label="Import", command=self.import_db)
         cate_menu.add_command(label="Export", command=self.export)
 
-        manager_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_command(label="Collector", command=self.opencollector)
 
         self.config(menu=menubar)
@@ -66,19 +66,24 @@ class Manager(tk.Tk):
         category_menu.config(width=15)
         category_menu.grid(padx=5, pady=5, row=0, column=0)
 
+        def change_orint(ori):
+            if ori == "Vertical" : self.vert = True
+            else : self.vert = False
+
         orient = ("Vertical", "Horizontal")
         orient_var = tk.StringVar(self)
         orient_var.set(orient[0])
-        video_ori = tk.OptionMenu(middleFrame, orient_var, *orient)
+        video_ori = tk.OptionMenu(middleFrame, orient_var, command=lambda e:change_orint(e), *orient)
         video_ori.config(width=10)
         video_ori.grid(padx=5, pady=5, row=0, column=1)
 
-        fonts = os.listdir(FONTS_DIR)
-        self.font_var = tk.StringVar(self)
-        self.font_var.set(fonts[1])
-        font_select = tk.OptionMenu(middleFrame, self.font_var, *fonts)
-        font_select.config(width=15)
-        font_select.grid(row=0, column=2, padx=5, pady=5)
+        def delete_callback():
+            if delete_var.get() == 1: self.delete = True 
+            else:   self.delete = False
+
+        delete_var = tk.IntVar()
+        delete_var.set(1)
+        tk.Checkbutton(middleFrame, text="Delete Texts", variable=delete_var, command=delete_callback).grid(padx=5, pady=5, row=0, column=2)
 
         def switch_callback():
             if switch_var.get() == 1: self.heading = True 
@@ -86,8 +91,7 @@ class Manager(tk.Tk):
 
         switch_var = tk.IntVar()
         switch_var.set(1)
-        switch = tk.Checkbutton(middleFrame, text="Include Title", variable=switch_var, command=switch_callback)
-        switch.grid(padx=5, pady=5, row=0, column=3)
+        tk.Checkbutton(middleFrame, text="Include Title", variable=switch_var, command=switch_callback).grid(padx=5, pady=5, row=0, column=3)
 
         self.titleEntry = tk.Entry(middleFrame, width=77)
         self.titleEntry.grid(padx=10, pady=5, row=1, column=0, columnspan=4)
@@ -200,8 +204,6 @@ class Manager(tk.Tk):
 
             self.data.insert(0, {"text":self.titleEntry.get(), "image":self.titlePath})
 
-        self.font = self.font_var.get()
-
         text_sele = self.text_count_select.get().split(",")
 
         if len(text_sele) != 1:
@@ -228,7 +230,7 @@ class Manager(tk.Tk):
             tuple: A tuple containing the created short, background path, and selected font.
         """
         if len(self.data) == 0: sys.exit(0)
-        return (self.data, self.backPath, self.font)
+        return (self.data, self.backPath, self.vert)
 
     def delete_item(self):
         """
@@ -289,16 +291,17 @@ class Manager(tk.Tk):
         """
         Remove the old texts and associated images from the database
         """
-        for i in self.removable:
-            fname = self.cursor.execute(IMAGE_WITH_ID(self.cate, i)).fetchone()
-            os.remove(fname[0])
-            self.cursor.execute(DELETE_ROW(self.cate, i))
-        print("removed old")
-        try:
-            self.conn.commit()
-            self.conn.close()
-        except Exception as e:
-            print(e)
+        if self.delete:
+            for i in self.removable:
+                fname = self.cursor.execute(IMAGE_WITH_ID(self.cate, i)).fetchone()
+                os.remove(fname[0])
+                self.cursor.execute(DELETE_ROW(self.cate, i))
+            print("removed old")
+            try:
+                self.conn.commit()
+                self.conn.close()
+            except Exception as e:
+                print(e)
 
     def export(self):
         """
