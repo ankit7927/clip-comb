@@ -5,42 +5,20 @@ import requests
 from src.constants import *
 
 class Collector(tk.Tk):
-    """A class for creating a Raw Text Collector for data collection and database insertion."""
-
-    def __init__(self, category, cursor, conn):
-        """
-        Initialize the Collector object.
-
-        Args:
-            category (str): The category for data collection.
-            cursor: The cursor object for database operations.
-            conn: The connection object for database operations.
-        """
+    cate:str = None
+    def __init__(self, cursor, conn):
         super().__init__()
         self.cursor = cursor
         self.conn = conn
-        self.category = category
         self.button_entry = []
 
         self.setup_ui()
 
     def setup_ui(self):
-        """
-        Set up the user interface with a Raw Text Collector and control buttons.
-        """
         self.title("Raw Text Collector")
         self.geometry("900x600")
-        self.resizable(0, 0)
+        self.resizable(0, 0)        
 
-        self.create_scrollable_frame()
-        self.create_control_buttons()
-
-        self.mainloop()
-
-    def create_scrollable_frame(self):
-        """
-        Create a Raw Text Collector with a canvas and a frame within the canvas.
-        """
         cframe = tk.Frame(self)
         cframe.pack(fill="both", expand=True)
 
@@ -57,23 +35,33 @@ class Collector(tk.Tk):
 
         self.frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
 
-    def create_control_buttons(self):
-        """
-        Create control buttons in a label frame at the bottom of the window.
-        """
         cont = tk.LabelFrame(self, text="Control")
         cont.pack(fill="both", padx=10, pady=10, side="bottom")
 
-        tk.Button(cont, text="Raw", command=self.add_raw).grid(row=0, column=0, padx=10, pady=10)
-        tk.Button(cont, text="Add", command=self.add_to_db).grid(row=0, column=1, padx=10, pady=10)
+        def loadCate(cate):
+            self.cate = cate
+
+        categories =  self.getCategory()
+        category_var = tk.StringVar()
+        category_var.set("Category")
+        category_menu = tk.OptionMenu(cont, category_var, command=lambda e:loadCate(e), *categories)
+        category_menu.grid(padx=10, pady=10, row=0, column=0)
+
+        tk.Button(cont, text="Raw", command=self.add_raw).grid(row=0, column=1, padx=10, pady=10)
+        tk.Button(cont, text="Add", command=self.add_to_db).grid(row=0, column=2, padx=10, pady=10)
+
+        self.mainloop()
+
+
+    def getCategory(self):
+        tables = self.cursor.execute(ALL_TABLE_QUERY).fetchall()
+        if len(tables) == 0:
+            return ["#None"]
+        if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
+            tables.remove((SEQUENCE_TABLE_NAME,))
+        return [table[0] for table in tables]
 
     def filter_text(self):
-        """
-        Filter the button_entry list based on user input in the entry fields.
-
-        Returns:
-            list: A list of fetchable data (dictionaries).
-        """
         fetchable = []
         processed_entries = []
 
@@ -89,22 +77,10 @@ class Collector(tk.Tk):
         return fetchable
 
     def copy_to_clip(self, text):
-        """
-        Copy the given text to the clipboard.
-
-        Args:
-            text (str): The text to be copied.
-        """
         self.clipboard_clear()
         self.clipboard_append(text)
 
     def add_raw(self):
-        """
-        Create a window for entering raw text and generate buttons and entry fields.
-
-        The entered raw text will be split into lines, and each line will correspond to a button and an entry field.
-        Clicking a button will copy its corresponding text to the clipboard.
-        """
         top = tk.Toplevel(self)
         hscroll = tk.Scrollbar(top, orient='horizontal')
         hscroll.pack(fill="x")
@@ -118,11 +94,6 @@ class Collector(tk.Tk):
         vscroll.config(command=t.yview)
 
         def get_raw():
-            """
-            Get the raw text from the text widget and generate buttons and entry fields based on the text.
-
-            Each line of the raw text will correspond to a button and an entry field in the main frame.
-            """
             text_list = [text for text in t.get(1.0, tk.END).split("\n")]
             self.button_entry.clear()
             for inx, d in enumerate(text_list):
@@ -140,15 +111,6 @@ class Collector(tk.Tk):
         tk.Button(top, text="Add", command=get_raw).pack(side=tk.BOTTOM, fill="x")
 
     def add_to_db(self):
-        """
-        Add the filtered data to the database.
-
-        The filtered data (fetchable) will be iterated, and for each item:
-        - The text and image URL will be extracted.
-        - An image ID will be generated.
-        - The image data will be retrieved from the URL and stored in a file.
-        - An SQL INSERT statement will be executed to insert the text, image filename, and None value into the database.
-        """
         fetchable = self.filter_text()
 
         for data in fetchable:
@@ -165,7 +127,7 @@ class Collector(tk.Tk):
                 with open(filename, "wb") as file:
                     file.write(response.content)
 
-                self.cursor.execute(INSERT_TEXT_IMAGE(self.category), (None, text, filename))
+                self.cursor.execute(INSERT_TEXT_IMAGE(self.cate), (None, text, filename))
                 self.conn.commit()
 
             except requests.exceptions.RequestException as e:

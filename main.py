@@ -1,6 +1,5 @@
-import os, sys
-from src.shorts import ShortsMaker
-from src.gui.manager import Manager
+import os
+from src.app import ClipComb
 from src.constants import *
 
 def prepare():
@@ -15,4 +14,4 @@ def prepare():
 
 if __name__ == "__main__":
     prepare()
-    ShortsMaker()
+    ClipComb()

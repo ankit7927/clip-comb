@@ -4,6 +4,8 @@ from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 from src.constants import *
 
+FONT_PATH = "RobotoSlab-Medium.ttf"
+
 def Back16x9(backPath:str) -> mp.VideoClip:
     """Crop Horizontal Background Clip"""
     back:mp.VideoClip = mp.VideoFileClip(backPath)
