@@ -26,7 +26,7 @@ def Back9x16(backPath:str) -> mp.VideoClip:
 
     return crop(back, x1=x_offset, y1=0, x2=x_offset + width, y2=height)
 
-def GenerateClip(data:list, backpath:str, vert:bool):
+def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list) -> list:
     IMAGE_POS = VER_IMAGE_POS if vert else HOR_IMAGE_POS
     IMAGE_HEIGHT = VER_IMAGE_HEIGHT if vert else HOR_IMAGE_HEIGHT
     TEXT_POS = VER_TEXT_POS if vert else HOR_TEXT_POS
@@ -35,34 +35,40 @@ def GenerateClip(data:list, backpath:str, vert:bool):
     if vert: back_clip:mp.VideoClip = Back9x16(backPath=backpath)
     else : back_clip:mp.VideoClip = Back16x9(backPath=backpath)
     
+    cliplist:list = []
     last_dur = 0
     for inx in range(len(data)):
         try:
-            audio_clip = mp.AudioFileClip(AUDIO_NAME(inx))
-            
+            fname = CLIP_NAME(RANDOM_NAME())
+            audio_clip = mp.AudioFileClip(audiolist[inx])
+
             img_clip = mp.ImageClip(data[inx]["image"]).set_position(IMAGE_POS)
             img_clip = img_clip.resize(height=IMAGE_HEIGHT)
             img_clip.duration = audio_clip.duration
             img_clip = img_clip.set_audio(audio_clip)
-            img_clip = img_clip.fx(speedx, 1.2)
-            img_clip = img_clip.fx(volumex, 2)
+            img_clip = img_clip.fx(speedx, AUDIO_SPEED)
+            img_clip = img_clip.fx(volumex, AUDIO_VOLUME)
 
-            text_clip = mp.TextClip(data[inx]["text"], font=FONT_PATH, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
+            text_clip = mp.TextClip(data[inx]["text"], font=FONT_NAME, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
             text_clip = text_clip.set_position(TEXT_POS, relative=True)
-            
-            back_clip = back_clip.subclip(last_dur, img_clip.duration)
-            
+
+            back_clip = back_clip.subclip(last_dur)
+ 
             con_clip = mp.CompositeVideoClip([back_clip, img_clip, text_clip], use_bgclip=True)
             con_clip.duration = img_clip.duration
-            con_clip.write_videofile(CLIP_NAME(inx))
+            con_clip.write_videofile(fname)
+            cliplist.append(fname)
             last_dur += img_clip.duration
+
         except Exception as e:
             print(e)
+    return cliplist
 
-def GenerateFinalCLip(lenth:int, fname:str):
+def GenerateFinalCLip(cliplist:list, fname:str):
     clip_chunks:list = []
-    for i in range(0, lenth):
-        clip_chunks.append(mp.VideoFileClip(CLIP_NAME(str(i))))
+    for clip in cliplist:
+        clip_chunks.append(mp.VideoFileClip(clip))
+
     final_clip =  mp.concatenate_videoclips(clip_chunks, method="compose")
     
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]), codec='libx264', audio_codec='aac')

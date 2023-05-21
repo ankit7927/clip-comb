@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-import sqlite3, os, random, requests, shutil, sys
+import sqlite3, os, requests, shutil, sys
 from src.constants import *
 from shutil import make_archive, unpack_archive
 from src.collector import Collector
@@ -77,8 +77,7 @@ class ClipComb(tk.Tk):
                 text = text_entry.get()
 
                 ext = img_link.get().split(".")[-1]
-                image_id = str(random.randint(10000000, 99999999))
-                filename = IMAGES_DIR + image_id + "." + ext
+                filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
 
                 try:
                     os.remove(item[2])

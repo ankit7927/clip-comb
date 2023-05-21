@@ -117,8 +117,7 @@ class Collector(tk.Tk):
             text = data["text"]
             image_url = data["img"]
             ext = image_url.split(".")[-1]
-            image_id = str(random.randint(10000000, 99999999))
-            filename = IMAGES_DIR + image_id + "." + ext
+            filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
 
             try:
                 response = requests.get(image_url)

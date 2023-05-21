@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from src.constants import *
-import os, random, requests
+import os, requests
 
 
 class Tab1UI:
@@ -47,8 +47,7 @@ class Tab1UI:
                 text = text_entry.get()
 
                 ext = img_link.get().split(".")[-1]
-                image_id = str(random.randint(10000000, 99999999))
-                filename = IMAGES_DIR + image_id + "." + ext
+                filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
 
                 try:
                     os.remove(item[2])

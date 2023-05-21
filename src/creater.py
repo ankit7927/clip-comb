@@ -6,16 +6,11 @@ import os
 def create(data, backpath, vert, delete):
     print(data)
     
-    for inx, i in enumerate(data):
-        print(f"Fetching Audio {inx}")
-        GenerateAudio(i["text"], inx)
+    audiolist:list = GenerateAudio(data)
 
-    print("generating clips")
-    GenerateClip(data, backpath, vert)
+    cliplist:list = GenerateClip(data, backpath, vert, audiolist)
 
-    print("generating final clip")
-    GenerateFinalCLip(len(data), data[0]["text"])
+    GenerateFinalCLip(cliplist, data[0]["text"])
 
-    if delete:
-        print("cleaning temp")
-        for f in os.listdir(TEMP_DIR): os.remove(TEMP_DIR+f)
+    for f in cliplist: os.remove(f)
+    for f in audiolist: os.remove(f)
