@@ -6,7 +6,8 @@ from src.creater import create
 import threading
 
 
-class Tab2UI:
+class CreatorUI:
+    
     titlepath:str = None
     cate:str = None
     backpath:str = None

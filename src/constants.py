@@ -39,7 +39,8 @@ TEXT_SELECTION_QUERY:str = lambda cate, id : f"SELECT * FROM {cate} WHERE id={id
 ALL_IMAGE:str = lambda cate : f"SELECT image from {cate}"
 IMAGE_WITH_ID:str = lambda cate, id : f"SELECT image from {cate} WHERE id={id}"
 DELETE_ROW:str = lambda cate, id : f"DELETE FROM {cate} WHERE id={id}"
-UPDATE_ROW:str = lambda cate : f"UPDATE {cate} SET text=?, image=? WHERE id=?"
+UPDATE_ROW_TEXT:str = lambda cate : f"UPDATE {cate} SET text=? WHERE id=?"
+UPDATE_ROW_IMAGE:str = lambda cate : f"UPDATE {cate} SET image=? WHERE id=?"
 DROP_TABLE:str = lambda cate : f"DROP TABLE {cate}"
 
 RANDOM_NAME:str = lambda: str(random.randint(10000000, 99999999))

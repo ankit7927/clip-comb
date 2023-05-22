@@ -4,10 +4,10 @@ from src.constants import *
 import os, requests
 
 
-class Tab1UI:
+class HomeUI:
 
     def getCategory(self):
-        tables = self.cursor.execute(ALL_TABLE_QUERY).fetchall()
+        tables = self.conn.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
         if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
@@ -21,7 +21,7 @@ class Tab1UI:
             self.cate = cate
             for item in self.tree.get_children():
                 self.tree.delete(item)
-            texts = self.cursor.execute(TEXT_ID_FROM_CATEGORY(cate)).fetchall()
+            texts = self.conn.execute(TEXT_ID_FROM_CATEGORY(cate)).fetchall()
             for text in texts:
                 self.tree.insert("", tk.END, values=text)
 
@@ -29,35 +29,38 @@ class Tab1UI:
         selected_item = self.tree.selection()
         if selected_item:
             item = self.tree.item(selected_item, "values")
-            img = self.cursor.execute(IMAGE_WITH_ID(self.cate, item[0])).fetchone()
+            img = self.conn.execute(IMAGE_WITH_ID(self.cate, item[0])).fetchone()
             os.remove(img[0])
-            self.cursor.execute(DELETE_ROW(self.cate, item[0]))
+            self.conn.execute(DELETE_ROW(self.cate, item[0]))
             self.loadCate(self.cate)
     
     def update_item(self):
         selected_item = self.tree.selection()
         if selected_item:
             itemID = self.tree.item(selected_item, "values")[0]
-            item = self.cursor.execute(TEXT_SELECTION_QUERY(self.cate, itemID)).fetchone()
+            item = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, itemID)).fetchone()
 
             def update():
-                if text_entry.get() == "" or img_link.get() == "":
-                    messagebox.showerror("bad entry", "both fields are required")
-                    return  
                 text = text_entry.get()
+                image_link = img_link.get()
+                if text == "":
+                    messagebox.showerror("bad entry", "both fields are required")
+                    return
 
-                ext = img_link.get().split(".")[-1]
-                filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
+                self.conn.execute(UPDATE_ROW_TEXT, (text, item[0]))
 
-                try:
-                    os.remove(item[2])
-                    img_data = requests.get(img_link.get()).content
-                    with open(filename, "wb") as file:
-                        file.write(img_data)
-                    self.cursor.execute(UPDATE_ROW(self.cate), (text, filename, item[0], ))
-                    self.conn.commit()
-                except Exception as e:
-                    raise(e)
+                if image_link != "":
+                    ext = img_link.get().split(".")[-1]
+                    filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
+
+                    try:
+                        os.remove(item[2])
+                        img_data = requests.get(image_link).content
+                        with open(filename, "wb") as file:
+                            file.write(img_data)
+                        self.conn.execute(UPDATE_ROW_IMAGE, (filename, item[0], ))
+                    except Exception as e:
+                        raise(e)
 
             root = tk.Toplevel(self.root)
 
@@ -72,8 +75,8 @@ class Tab1UI:
 
             root.mainloop()
 
-    def __init__(self, tab, cursor):
-        self.cursor = cursor
+    def __init__(self, tab, conn):
+        self.conn = conn
         self.root = tab
 
         self.initUI()

@@ -70,5 +70,4 @@ def GenerateFinalCLip(cliplist:list, fname:str):
         clip_chunks.append(mp.VideoFileClip(clip))
 
     final_clip =  mp.concatenate_videoclips(clip_chunks, method="compose")
-    
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]), codec='libx264', audio_codec='aac')
