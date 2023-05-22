@@ -20,7 +20,7 @@ class CreatorUI:
 
 
     def getCategory(self):
-        tables = self.cursor.execute(ALL_TABLE_QUERY).fetchall()
+        tables = self.conn.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
         if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
@@ -61,22 +61,20 @@ class CreatorUI:
         if len(text_sele) != 1:
             for i in text_sele:
                 try:
-                    rec = self.cursor.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
+                    rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
                     self.data.append({"text":rec[1], "image":rec[2]})
                 except Exception as e:  print(e)
             self.removable= text_sele
         else:
-            records = self.cursor.execute(f"SELECT * FROM {self.cate}").fetchmany(int(self.text_count_select.get()))
+            records = self.conn.execute(f"SELECT * FROM {self.cate}").fetchmany(int(self.text_count_select.get()))
 
             for rec in records:
                 self.removable.append(rec[0])
                 self.data.append({"text":rec[1], "image":rec[2]})
 
-        ## start new thread
-        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.vert, self.delete))
+        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.vert, self.conn, self.delete, self.cate, self.removable))
         thread.start()
 
-        #reset parameters
         self.titlepath = None
         self.titleEntry.delete(0, tk.END)
         self.backpath = None
@@ -84,8 +82,8 @@ class CreatorUI:
         self.removable = []
 
 
-    def __init__(self, tab, cursor):
-        self.cursor = cursor
+    def __init__(self, tab, conn):
+        self.conn = conn
         self.root = tab
 
         self.initUI()

@@ -4,8 +4,8 @@ import sqlite3, os, shutil, sys
 from src.constants import *
 from shutil import make_archive, unpack_archive
 from src.collector import Collector
-from hometab import HomeUI
-from creatortab import CreatorUI
+from src.hometab import HomeUI
+from src.creatortab import CreatorUI
 
 class ClipComb(tk.Tk):
 
@@ -15,7 +15,6 @@ class ClipComb(tk.Tk):
 
     def set_ui(self) -> None:
         self.conn = sqlite3.connect(DB_PATH)
-        self.conn = self.conn.conn()
 
         self.title(APP_NAME)
         self.geometry("600x400")

@@ -1,9 +1,9 @@
 from src.audio import GenerateAudio
 from src.video import GenerateClip, GenerateFinalCLip
-from src.constants import TEMP_DIR
-import os 
+from src.constants import IMAGE_WITH_ID, DELETE_ROW
+import os, sqlite3
 
-def create(data, backpath, vert, delete):
+def create(data:list, backpath:str, vert:bool, conn:sqlite3.Connection, delete:bool, cate:str, removable:list):
     print(data)
     
     audiolist:list = GenerateAudio(data)
@@ -14,3 +14,10 @@ def create(data, backpath, vert, delete):
 
     for f in cliplist: os.remove(f)
     for f in audiolist: os.remove(f)
+
+    if delete:
+        for i in removable:
+            fname = conn.execute(IMAGE_WITH_ID(cate, i)).fetchone()
+            os.remove(fname[0])
+            conn.execute(DELETE_ROW(cate, i))
+        print("removed old")
