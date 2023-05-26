@@ -12,7 +12,6 @@ def create(data:list, backpath:str, vert:bool, conn:sqlite3.Connection, delete:b
 
     GenerateFinalCLip(cliplist, data[0]["text"])
 
-    for f in cliplist: os.remove(f)
     for f in audiolist: os.remove(f)
 
     if delete:
