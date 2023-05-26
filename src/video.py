@@ -36,10 +36,10 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list) -> list:
     else : back_clip:mp.VideoClip = Back16x9(backPath=backpath)
     
     cliplist:list = []
-    last_dur = 0
+    last_dur:int = 0
     for inx in range(len(data)):
         try:
-            fname = CLIP_NAME(RANDOM_NAME())
+            fname:str = CLIP_NAME(RANDOM_NAME())
             audio_clip = mp.AudioFileClip(audiolist[inx])
 
             img_clip = mp.ImageClip(data[inx]["image"]).set_position(IMAGE_POS)
@@ -62,6 +62,7 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list) -> list:
 
         except Exception as e:
             print(e)
+    back_clip.close()
     return cliplist
 
 def GenerateFinalCLip(cliplist:list, fname:str):
@@ -69,5 +70,5 @@ def GenerateFinalCLip(cliplist:list, fname:str):
     for clip in cliplist:
         clip_chunks.append(mp.VideoFileClip(clip))
 
-    final_clip =  mp.concatenate_videoclips(clip_chunks, method="compose")
-    final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]), codec='libx264', audio_codec='aac')
+    final_clip:mp.CompositeVideoClip =  mp.concatenate_videoclips(clip_chunks, method="compose")
+    final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
