@@ -2,6 +2,7 @@ import moviepy.editor as mp
 from moviepy.video.fx.crop import crop
 from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
+import moviepy.video.fx.all as vfx
 from src.constants import *
 
 FONT_PATH = "RobotoSlab-Medium.ttf"
@@ -78,11 +79,14 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list, fname) -> l
 
 def ExtractClip(durations:list, filepath:str, fname:str) -> list:
     video:mp.VideoClip = mp.VideoFileClip(filepath)
+
     clips:list = []
 
     for duration in durations:
         clip:mp.VideoClip = video.subclip(duration[0], duration[1])
         clip = Crop9x16(backPath=None, clip=clip)
+        clip = clip.fx(vfx.lum_contrast, lum=0.5, contrast=0.5, contrast_thr=100)
+        clip = clip.crossfadein(1.4)
         clips.append(clip)
 
     final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(clips, method="compose")
