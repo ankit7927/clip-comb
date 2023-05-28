@@ -6,9 +6,14 @@ from src.constants import *
 
 FONT_PATH = "RobotoSlab-Medium.ttf"
 
-def Back16x9(backPath:str) -> mp.VideoClip:
+def Crop16x9(backPath:str, clip:mp.VideoClip) -> mp.VideoClip:
     """Crop Horizontal Background Clip"""
-    back:mp.VideoClip = mp.VideoFileClip(backPath)
+    back:mp.VideoClip = None 
+
+    if backPath and not clip:
+        back = mp.VideoFileClip(backPath)
+    elif clip and not backPath:
+        back = clip
 
     width = back.size[0]
     height = int(width * 9 / 16)
@@ -16,9 +21,14 @@ def Back16x9(backPath:str) -> mp.VideoClip:
 
     return crop(back, x1=0, y1=y_offset, x2=width, y2=y_offset + height)
 
-def Back9x16(backPath:str) -> mp.VideoClip:
+def Crop9x16(backPath:str, clip:mp.VideoClip) -> mp.VideoClip:
     """Crop Vertical Background Clip"""
-    back:mp.VideoClip = mp.VideoFileClip(backPath)
+    back:mp.VideoClip = None 
+
+    if backPath and not clip:
+        back = mp.VideoFileClip(backPath)
+    elif clip and not backPath:
+        back = clip
 
     height = back.size[1]
     width = int(height * 9 / 16)
@@ -26,14 +36,14 @@ def Back9x16(backPath:str) -> mp.VideoClip:
 
     return crop(back, x1=x_offset, y1=0, x2=x_offset + width, y2=height)
 
-def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list) -> list:
+def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list, fname) -> list:
     IMAGE_POS = VER_IMAGE_POS if vert else HOR_IMAGE_POS
     IMAGE_HEIGHT = VER_IMAGE_HEIGHT if vert else HOR_IMAGE_HEIGHT
     TEXT_POS = VER_TEXT_POS if vert else HOR_TEXT_POS
     TEXT_SIZE = VER_TEXT_SIZE if vert else HOR_TEXT_SIZE
 
-    if vert: back_clip:mp.VideoClip = Back9x16(backPath=backpath)
-    else : back_clip:mp.VideoClip = Back16x9(backPath=backpath)
+    if vert: back_clip:mp.VideoClip = Crop9x16(backPath=backpath, clip=None)
+    else : back_clip:mp.VideoClip = Crop16x9(backPath=backpath, clip=None)
     
     cliplist:list = []
     last_dur:int = 0
@@ -57,12 +67,24 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list) -> list:
             con_clip.duration = img_clip.duration
             cliplist.append(con_clip)
             last_dur += img_clip.duration
-
         except Exception as e:
             print(e)
-    back_clip.close()
-    return cliplist
-
-def GenerateFinalCLip(cliplist:list, fname:str):
-    final_clip:mp.CompositeVideoClip =  mp.concatenate_videoclips(cliplist, method="compose")
+    
+    final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(cliplist, method="compose")
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
+
+    back_clip.close()
+
+
+def ExtractClip(durations:list, filepath:str, fname:str) -> list:
+    video:mp.VideoClip = mp.VideoFileClip(filepath)
+    clips:list = []
+
+    for duration in durations:
+        clip:mp.VideoClip = video.subclip(duration[0], duration[1])
+        clip = Crop9x16(backPath=None, clip=clip)
+        clips.append(clip)
+
+    final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(clips, method="compose")
+    final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
+    video.close()

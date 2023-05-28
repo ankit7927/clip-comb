@@ -1,5 +1,5 @@
 from src.audio import GenerateAudio
-from src.video import GenerateClip, GenerateFinalCLip
+from src.video import GenerateClip, ExtractClip
 from src.constants import IMAGE_WITH_ID, DELETE_ROW
 import os, sqlite3
 
@@ -8,9 +8,7 @@ def create(data:list, backpath:str, vert:bool, conn:sqlite3.Connection, delete:b
     
     audiolist:list = GenerateAudio(data)
 
-    cliplist:list = GenerateClip(data, backpath, vert, audiolist)
-
-    GenerateFinalCLip(cliplist, data[0]["text"])
+    GenerateClip(data, backpath, vert, audiolist, data[0]["text"])
 
     for f in audiolist: os.remove(f)
 
@@ -20,3 +18,7 @@ def create(data:list, backpath:str, vert:bool, conn:sqlite3.Connection, delete:b
             os.remove(fname[0])
             conn.execute(DELETE_ROW(cate, i))
         print("removed old")
+
+def extract(durs:list, filepath:str, fname:str):
+    ExtractClip(durs, filepath, fname)
+    
