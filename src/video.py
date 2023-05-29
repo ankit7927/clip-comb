@@ -89,6 +89,6 @@ def ExtractClip(durations:list, filepath:str, fname:str) -> list:
         clip = clip.crossfadein(1.4)
         clips.append(clip)
 
-    final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(clips, method="compose")
+    final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(clips, method="chain")
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
     video.close()

@@ -73,13 +73,13 @@ class Extractor:
 
 
     def setA(self):
-        self.varA = self.progress_value.get()
+        self.varA = self.start_time["text"]
         self.btnA["text"] = self.varA
         if not self.vid_player.is_paused():
             self.vid_player.pause()
 
     def setB(self):
-        self.varB = self.progress_value.get()
+        self.varB = self.start_time["text"]
         self.btnB["text"] = self.varB
         if not self.vid_player.is_paused():
             self.vid_player.pause()
@@ -113,7 +113,7 @@ class Extractor:
 
     def setup_ui(self):
         
-        videoframe = tk.LabelFrame(self.root, text="video player")
+        videoframe = tk.Frame(self.root)
         videoframe.pack(fill=tk.BOTH, padx=5, pady=10, side=tk.LEFT)
 
         self.vid_player = TkinterVideo(scaled=True, master=videoframe)
@@ -146,9 +146,9 @@ class Extractor:
         self.btnB = tk.Button(playcont, text="B", width=10, command=self.setB, anchor=tk.NW)
         self.btnB.grid(row=0, column=7, padx=5, pady=10)
 
-        self.progress_value = tk.IntVar(playcont, playcont)
+        self.progress_value = tk.DoubleVar(playcont, playcont)
 
-        self.progress_slider = tk.Scale(playcont, variable=self.progress_value, orient="horizontal", command=self.seek, length=500)
+        self.progress_slider = tk.Scale(playcont, variable=self.progress_value, orient="horizontal", command=self.seek, length=500, showvalue=False)
         self.progress_slider.grid(row=1, columnspan=7, padx=5, pady=10)
 
         self.btnSave = tk.Button(playcont, text="Save", width=10, command=self.saveAB)
@@ -158,7 +158,7 @@ class Extractor:
         self.vid_player.bind("<<SecondChanged>>", self.update_scale)
         self.vid_player.bind("<<Ended>>", self.video_ended )
 
-        controlframe = tk.LabelFrame(self.root, text="video player")
+        controlframe = tk.Frame(self.root)
         controlframe.pack(fill=tk.BOTH, expand=True, pady=10, side=tk.RIGHT)
 
         delete_btn = tk.Button(controlframe, text="Delete", command=self.delete_dur)
