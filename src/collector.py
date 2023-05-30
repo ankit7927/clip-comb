@@ -1,14 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-import random
 import requests
 from src.constants import *
 
 class Collector(tk.Tk):
     cate:str = None
-    def __init__(self, cursor, conn):
+    def __init__(self, conn):
         super().__init__()
-        self.cursor = cursor
         self.conn = conn
         self.button_entry = []
 
@@ -54,7 +52,7 @@ class Collector(tk.Tk):
 
 
     def getCategory(self):
-        tables = self.cursor.execute(ALL_TABLE_QUERY).fetchall()
+        tables = self.conn.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
         if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
@@ -96,7 +94,7 @@ class Collector(tk.Tk):
         def get_raw():
             text_list = [text for text in t.get(1.0, tk.END).split("\n")]
             self.button_entry.clear()
-            for inx, d in enumerate(text_list):
+            for d in text_list:
                 tempFrame = tk.Frame(self.frame)
                 tempFrame.pack(padx=10, pady=10, expand=True)
 
@@ -126,8 +124,7 @@ class Collector(tk.Tk):
                 with open(filename, "wb") as file:
                     file.write(response.content)
 
-                self.cursor.execute(INSERT_TEXT_IMAGE(self.cate), (None, text, filename))
-                self.conn.commit()
+                self.conn.execute(INSERT_TEXT_IMAGE(self.cate), (None, text, filename))
 
             except requests.exceptions.RequestException as e:
                 print("Error: Failed to download image:", e)

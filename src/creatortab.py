@@ -6,7 +6,8 @@ from src.creater import create
 import threading
 
 
-class Tab2UI:
+class CreatorUI:
+    
     titlepath:str = None
     cate:str = None
     backpath:str = None
@@ -19,7 +20,7 @@ class Tab2UI:
 
 
     def getCategory(self):
-        tables = self.cursor.execute(ALL_TABLE_QUERY).fetchall()
+        tables = self.conn.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
         if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
@@ -60,22 +61,20 @@ class Tab2UI:
         if len(text_sele) != 1:
             for i in text_sele:
                 try:
-                    rec = self.cursor.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
+                    rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
                     self.data.append({"text":rec[1], "image":rec[2]})
                 except Exception as e:  print(e)
             self.removable= text_sele
         else:
-            records = self.cursor.execute(f"SELECT * FROM {self.cate}").fetchmany(int(self.text_count_select.get()))
+            records = self.conn.execute(f"SELECT * FROM {self.cate}").fetchmany(int(self.text_count_select.get()))
 
             for rec in records:
                 self.removable.append(rec[0])
                 self.data.append({"text":rec[1], "image":rec[2]})
 
-        ## start new thread
-        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.vert, self.delete))
+        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.vert, self.conn, self.delete, self.cate, self.removable))
         thread.start()
 
-        #reset parameters
         self.titlepath = None
         self.titleEntry.delete(0, tk.END)
         self.backpath = None
@@ -83,16 +82,16 @@ class Tab2UI:
         self.removable = []
 
 
-    def __init__(self, tab, cursor):
-        self.cursor = cursor
+    def __init__(self, tab, conn):
+        self.conn = conn
         self.root = tab
 
         self.initUI()
 
 
     def initUI(self):
-        geometry = tk.LabelFrame(self.root, text="Geometry")
-        geometry.pack(padx=10, pady=5, fill="x")
+        geometry = tk.Frame(self.root)
+        geometry.pack(fill=tk.BOTH, side=tk.RIGHT)
 
         categories =  self.getCategory()
         category_var = tk.StringVar()
@@ -102,7 +101,7 @@ class Tab2UI:
 
         category_menu = tk.OptionMenu(geometry, category_var, command=setcate, *categories)
         category_menu.config(width=15)
-        category_menu.grid(padx=5, pady=5, row=0, column=0)
+        category_menu.pack(padx=5, pady=5, fill=tk.X)
 
         def change_orint(ori):
             if ori == "Vertical" : self.vert = True
@@ -112,15 +111,22 @@ class Tab2UI:
         orient_var = tk.StringVar()
         orient_var.set(orient[0])
         video_ori = tk.OptionMenu(geometry, orient_var, command=lambda e:change_orint(e), *orient)
-        video_ori.config(width=10)
-        video_ori.grid(padx=5, pady=5, row=0, column=1)
+        video_ori.config(width=15)
+        video_ori.pack(padx=5, pady=5, fill=tk.X)
 
         backBtn = tk.Button(geometry, text="Background", command=lambda:self.select_media(type="back"))
-        backBtn.grid(padx=5, pady=5, row=0, column=2)
+        backBtn.pack(padx=5, pady=5, fill=tk.X)
+
+        createBtn = tk.Button(geometry, text="Start Creating", command=self.prepareData)
+        createBtn.pack(padx=5, pady=30, fill=tk.X)
 
 
-        titleframe = tk.LabelFrame(self.root, text="Title")
-        titleframe.pack(padx=10, pady=5, fill="x")
+        testframe = tk.Frame(self.root)
+        testframe.pack(fill="both", expand=True, side=tk.LEFT)
+
+
+        titleframe = tk.LabelFrame(testframe, text="Title")
+        titleframe.pack(padx=10, pady=5, fill=tk.X)
 
         def switch_callback():
             if switch_var.get() == 1: self.title = True 
@@ -130,22 +136,22 @@ class Tab2UI:
         switch_var.set(1)
         tk.Checkbutton(titleframe, text="Include Title", variable=switch_var, command=switch_callback).grid(padx=5, pady=5, row=0, sticky="w")
 
-        self.titleEntry = tk.Entry(titleframe, width=50)
+        self.titleEntry = tk.Entry(titleframe, width=80)
         self.titleEntry.grid(padx=10, pady=5, row=1, column=0)
 
         imageBtn = tk.Button(titleframe, text="Title Image", command=lambda:self.select_media(type="title"))
         imageBtn.grid(padx=5, pady=5, row=1, column=1)
         
 
-        textframe = tk.LabelFrame(self.root, text="Text")
-        textframe.pack(padx=10, pady=5, fill="x")
+        textframe = tk.LabelFrame(testframe, text="Text")
+        textframe.pack(padx=10, pady=5, fill=tk.X)
 
-        tk.Label(textframe, text="Select Number of text or type specific text id with ',' saparated").grid(padx=5, pady=5, row=0, sticky="w")
+        tk.Label(textframe, text="Select Number of text or type specific text id with ',' saparated").grid(padx=5, pady=5, row=0, sticky=tk.W)
 
         text_selection = [i for i in range(1, 8)]
         self.text_count_select = ttk.Combobox(textframe, values=text_selection, width=40)
         self.text_count_select.current(0)
-        self.text_count_select.grid(row=1, column=0, padx=5, pady=10, sticky="w")
+        self.text_count_select.grid(row=1, column=0, padx=5, pady=10, sticky=tk.W)
         
         def delete_callback():
             if delete_var.get() == 1: self.delete = True 
@@ -155,5 +161,4 @@ class Tab2UI:
         delete_var.set(1)
         tk.Checkbutton(textframe, text="Delete Texts", variable=delete_var, command=delete_callback).grid(padx=10, pady=10, row=1, column=1)
 
-        createBtn = tk.Button(self.root, text="Start Creating", command=self.prepareData)
-        createBtn.pack(padx=10, pady=10, fill="x")
+        
