@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 APP_NAME:str = "Clip-Combiner"
 DB_NAME:str="shorts.db"
@@ -27,6 +28,7 @@ FINAL_CLIP_NAME:str=lambda fname: f"{OUTPUT_DIR}{fname}.mp4"
 
 ALL_FILES_TUP = ("All files", "*.*")
 VIDEO_FILE_TUP = ("Video file", "*.mp4")
+AUDIO_FILE_TUP = ("Audio file", "*.mp3")
 IMAGE_FILE_TUP = ("Image files", "*.png *.jpg *.jpeg")
 ARCHIVE_FILE_TUP = ("Archive file", "*.zip")
 
@@ -44,3 +46,6 @@ UPDATE_ROW_IMAGE:str = lambda cate : f"UPDATE {cate} SET image=? WHERE id=?"
 DROP_TABLE:str = lambda cate : f"DROP TABLE {cate}"
 
 RANDOM_NAME:str = lambda: str(random.randint(10000000, 99999999))
+def TIME_STR_CONVERTER(time_string:str):
+    time = datetime.strptime(time_string, "%H.%M.%S")
+    return time.strftime("%H:%M:%S")

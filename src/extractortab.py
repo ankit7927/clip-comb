@@ -1,108 +1,52 @@
-import datetime
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from tkVideoPlayer import TkinterVideo
 from src.creater import extract
+from src.constants import *
 import threading
 
 class Extractor:
 
-    varA = 0
-    varB = 0
+    video_file:str = ""
+    music_file:str = ""
 
-    def update_duration(self, event):
-        duration = self.vid_player.video_info()["duration"]
-        self.end_time["text"] = str(datetime.timedelta(seconds=duration))
-        self.progress_slider["to"] = duration
-
-
-    def update_scale(self, event):
-        current_time = self.vid_player.current_duration()
-        hours = int(current_time / 3600)
-        minutes = int((current_time % 3600) / 60)
-        seconds = int((current_time % 3600) % 60)
-        self.progress_value.set(current_time)
-        self.start_time["text"] = "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
-
-
-
-
-    def load_video(self):
-        self.file_path = filedialog.askopenfilename()
-
-        if self.file_path:
-            self.vid_player.load(self.file_path)
-            self.progress_value.set(0)
-            self.vid_player.play()
-
-
-    def seek(self, value):
-        self.vid_player.seek(int(value))
-
-    def skip(self, value):
-        self.vid_player.seek(self.progress_slider.get()+value)
-        self.progress_value.set(self.progress_slider.get()+value)
-
-
-    def play_pause(self):
-        if self.file_path != "":
-            if self.vid_player.is_paused():
-                self.vid_player.play()
-            else:
-                self.vid_player.pause()
-
-
-    def video_ended(self, event):
-        duration = self.vid_player.video_info()["duration"]
-        minutes = duration // 60
-        seconds = duration % 60
-        self.progress_slider.set(self.progress_slider["to"])
-        self.play_pause_btn["text"] = "Play"
-        self.start_time["text"] = str(datetime.timedelta(minutes=minutes, seconds=seconds))
-        self.progress_slider.set(0)
-        self.progress_value.set(0)
-
-    def delete_dur(self):
+    def delete_one(self):
         selected = self.durTree.focus()
-        if selected == "":
-            all_durs = self.durTree.get_children()
-            for i in all_durs:
-                self.durTree.delete(i)
-        else:
+        if selected != "":
             self.durTree.delete(selected)
 
-
-    def setA(self):
-        self.varA = self.start_time["text"]
-        self.btnA["text"] = self.varA
-        if not self.vid_player.is_paused():
-            self.vid_player.pause()
-
-    def setB(self):
-        self.varB = self.start_time["text"]
-        self.btnB["text"] = self.varB
-        if not self.vid_player.is_paused():
-            self.vid_player.pause()
-
-    def saveAB(self):
-        if self.varA != self.varB and self.varA < self.varB:
-            self.durTree.insert("", tk.END, values=(self.varA, self.varB))
-            self.varA = 0
-            self.varB = 0
-            self.btnA["text"] = "A"
-            self.btnB["text"] = "B"
+    def delete_all(self):
+        all_durs = self.durTree.get_children()
+        for i in all_durs:
+                self.durTree.delete(i)
+        
+    def saveDur(self):
+        adur = self.start_entry.get()
+        bdur = self.end_entry.get()
+        if adur != bdur:
+            a = TIME_STR_CONVERTER(adur)
+            b = TIME_STR_CONVERTER(bdur)
+            if a < b:
+                self.durTree.insert("", tk.END, values=(a,b))
+                self.start_entry.delete(0, tk.END)
+                self.end_entry.delete(0, tk.END)
+            else:
+                messagebox.showerror("bad entry", "start duration is greater then end")
 
 
     def extractClips(self):
         if self.titleEntry.get() == "":
             messagebox.showerror("bad entry", "title is required")
             return
+        elif self.video_file == "" or self.music_file == "":
+            messagebox.showerror("bad selection", "video or audio file is missing")
+            return
+        
         durs:list = []
         all_durs = self.durTree.get_children()
         for i in all_durs:
             durs.append(self.durTree.item(i)["values"])
         
-        thread = threading.Thread(target=extract, args=(durs, self.file_path, self.titleEntry.get()))
+        thread = threading.Thread(target=extract, args=(durs, self.video_file, self.music_file, self.titleEntry.get()))
         thread.start()
 
 
@@ -112,70 +56,61 @@ class Extractor:
         
 
     def setup_ui(self):
+
+        file_frame = tk.LabelFrame(self.root, text="Files")
+        file_frame.pack(fill=tk.X, expand=True, padx=10, pady=4)
+
+        def select_media(type):
+            if type == "video":
+                filetypes = (VIDEO_FILE_TUP, ALL_FILES_TUP)
+                video = filedialog.askopenfilename(title="Select Video", filetypes=filetypes)
+                if video:
+                    self.video_file = video
+                    video_file_btn["text"] = video
+            elif type == "music":
+                filetypes = (AUDIO_FILE_TUP, ALL_FILES_TUP)
+                music = filedialog.askopenfilename(title="Select Music", filetypes=filetypes)
+                if music:
+                    self.music_file = music
+                    music_file_btn["text"] = music
+
+        video_file_btn = tk.Button(file_frame, text="Load Video File", width=50, command=lambda: select_media("video"))
+        video_file_btn.grid(row=0, column=0, padx=10, pady=10)
+
+        music_file_btn = tk.Button(file_frame, text="Load Music File", width=50, command=lambda: select_media("music"))
+        music_file_btn.grid(row=0, column=1, padx=10, pady=10)
+
+        input_frame = tk.LabelFrame(self.root, text="Duration Selection")
+        input_frame.pack(fill=tk.X, expand=True, padx=10, pady=4)
+
+        self.start_entry = tk.Entry(input_frame)
+        self.start_entry.grid(row=0, column=0, padx=10, pady=10)
+
+        self.end_entry = tk.Entry(input_frame)
+        self.end_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        tk.Button(input_frame, text="Save", width=10, command=self.saveDur).grid(row=0, column=2, padx=10, pady=10)
+
+        tk.Button(input_frame, text="Delete Selected", width=15, command=self.delete_one).grid(row=0, column=3, padx=10, pady=10)
+
+        tk.Button(input_frame, text="Delete All", width=10, command=self.delete_all).grid(row=0, column=4, padx=10, pady=10)
         
-        videoframe = tk.Frame(self.root)
-        videoframe.pack(fill=tk.BOTH, padx=5, pady=10, side=tk.LEFT)
 
-        self.vid_player = TkinterVideo(scaled=True, master=videoframe)
-        self.vid_player.pack(expand=True, fill="both")
-
-        playcont = tk.LabelFrame(videoframe, text="Play Controll")
-        playcont.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=10)
-
-        load_btn = tk.Button(playcont, text="Load", command=self.load_video, width=6)
-        load_btn.grid(row=0, column=0,padx=5, pady=10, sticky=tk.NW)
-
-        play_pause_btn = tk.Button(playcont, text="Pause/Play", command=self.play_pause, width=10)
-        play_pause_btn.grid(row=0, column=1, pady=10, sticky=tk.NW)
-
-        seekbw = tk.Button(playcont, text="-5", command=lambda: self.skip(-5))
-        seekbw.grid(row=0, column=2, pady=10, sticky=tk.NW)
-
-        seekfw = tk.Button(playcont, text="+5", command=lambda: self.skip(5))
-        seekfw.grid(row=0, column=3, pady=10, sticky=tk.NW)
-
-        self.start_time = tk.Label(playcont, text=str(datetime.timedelta(seconds=0)))
-        self.start_time.grid(row=0, column=4, padx=5, pady=10, sticky=tk.NW)
-
-        self.end_time = tk.Label(playcont, text=str(datetime.timedelta(seconds=0)))
-        self.end_time.grid(row=0, column=5, padx=5, pady=10, sticky=tk.NW)
-
-        self.btnA = tk.Button(playcont, text="A", width=10, command=self.setA, anchor=tk.NW)
-        self.btnA.grid(row=0, column=6)
-
-        self.btnB = tk.Button(playcont, text="B", width=10, command=self.setB, anchor=tk.NW)
-        self.btnB.grid(row=0, column=7, padx=5, pady=10)
-
-        self.progress_value = tk.DoubleVar(playcont, playcont)
-
-        self.progress_slider = tk.Scale(playcont, variable=self.progress_value, orient="horizontal", command=self.seek, length=500, showvalue=False)
-        self.progress_slider.grid(row=1, columnspan=7, padx=5, pady=10)
-
-        self.btnSave = tk.Button(playcont, text="Save", width=10, command=self.saveAB)
-        self.btnSave.grid(row=1, column=7)
-
-        self.vid_player.bind("<<Duration>>", self.update_duration)
-        self.vid_player.bind("<<SecondChanged>>", self.update_scale)
-        self.vid_player.bind("<<Ended>>", self.video_ended )
-
-        controlframe = tk.Frame(self.root)
-        controlframe.pack(fill=tk.BOTH, expand=True, pady=10, side=tk.RIGHT)
-
-        delete_btn = tk.Button(controlframe, text="Delete", command=self.delete_dur)
-        delete_btn.pack(fill=tk.X, padx=5)
-
-        self.durTree = tk.ttk.Treeview(controlframe, show="headings", selectmode="browse", columns=("start", "end"))
-        self.durTree.pack(padx=5, pady=10)
+        self.durTree = tk.ttk.Treeview(self.root, show="headings", selectmode="browse", columns=("start", "end"))
+        self.durTree.pack(fill=tk.X, expand=True, padx=10, pady=4)
 
         self.durTree.column("start", width=80)
         self.durTree.column("end", width=80)
         self.durTree.heading("start", text="Start")
         self.durTree.heading("end", text="End")
 
-        self.titleEntry = tk.Entry(controlframe)
-        self.titleEntry.pack(fill=tk.X, padx=5)
-    
-        tk.Button(controlframe, text="Create", command=self.extractClips).pack(fill=tk.X, padx=5, pady=10)
+        creation_frame = tk.LabelFrame(self.root, text="Creation")
+        creation_frame.pack(fill=tk.X, expand=True, padx=10, pady=4)
 
+        self.titleEntry = tk.Entry(creation_frame, width=100)
+        self.titleEntry.grid(row=0, column=0, padx=10, pady=10)
+
+        create_btn = tk.Button(creation_frame, text="Create", width=10, command=self.extractClips)
+        create_btn.grid(row=0, column=1, padx=10, pady=10)
 
         self.root.mainloop()

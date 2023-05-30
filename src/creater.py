@@ -19,6 +19,6 @@ def create(data:list, backpath:str, vert:bool, conn:sqlite3.Connection, delete:b
             conn.execute(DELETE_ROW(cate, i))
         print("removed old")
 
-def extract(durs:list, filepath:str, fname:str):
-    ExtractClip(durs, filepath, fname)
+def extract(durs:list, videofile:str, audiofile:str, fname:str):
+    ExtractClip(durations=durs, videopath=videofile, audiopath=audiofile, fname=fname)
     
