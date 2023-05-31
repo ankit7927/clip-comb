@@ -107,7 +107,7 @@ class HomeUI:
                         img_data = requests.get(image_link).content
                         with open(filename, "wb") as file:
                             file.write(img_data)
-                        self.conn.execute(UPDATE_ROW_IMAGE, (filename, item[0], ))
+                        self.conn.execute(UPDATE_ROW_IMAGE(self.cate), (filename, item[0], ))
                     except Exception as e:
                         raise(e)
                 root.destroy()
