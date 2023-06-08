@@ -2,7 +2,6 @@ import tkinter as tk
 import sqlite3
 from src.constants import *
 from src.hometab import HomeUI
-from src.creatortab import CreatorUI
 from src.extractortab import Extractor
 
 class ClipComb(tk.Tk):
@@ -22,17 +21,12 @@ class ClipComb(tk.Tk):
         notebook.pack(expand=True, fill="both")
 
         tab1 = tk.ttk.Frame(notebook)
-        tab2 = tk.ttk.Frame(notebook)
         tab3 = tk.ttk.Frame(notebook)
 
         notebook.add(tab1, text="Home")
-        notebook.add(tab2, text="Create")
         notebook.add(tab3, text="Extractor")
 
         HomeUI(tab1, self.conn)
-
-        CreatorUI(tab2, self.conn)
-
         Extractor(tab3)
 
         self.mainloop()

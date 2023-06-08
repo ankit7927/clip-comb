@@ -5,9 +5,8 @@ APP_NAME:str = "Clip-Combiner"
 DB_NAME:str="shorts.db"
 DB_DIR:str="db/"
 DB_PATH:str=DB_DIR+DB_NAME
-FONT_ROBOTO:str="src/RobotoSlab-EB.ttf"
+FONT_ROBOTO:str="src/assets/RobotoSlab-EB.ttf"
 TEMP_DIR:str="temp/"
-ZIP_NAME:str="db"
 OUTPUT_DIR:str="output/"
 AUDIO_VOLUME:int=2
 AUDIO_SPEED:int=1.2
@@ -22,7 +21,6 @@ HOR_TEXT_SIZE = (1380, None)
 VER_TEXT_SIZE = (480, None)
 
 AUDIO_NAME:str=lambda fname : f"{TEMP_DIR}{fname}.mp3"
-CLIP_NAME:str=lambda fname : f"{TEMP_DIR}{fname}_clp.mp4"
 FINAL_CLIP_NAME:str=lambda fname: f"{OUTPUT_DIR}{fname}.mp4"
 
 ALL_FILES_TUP = ("All files", "*.*")

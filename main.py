@@ -7,8 +7,6 @@ def prepare():
         os.mkdir(TEMP_DIR)
     if not os.path.isdir(DB_DIR):
         os.mkdir(DB_DIR)
-    if not os.path.isdir(IMAGES_DIR):
-        os.mkdir(IMAGES_DIR)
     if not os.path.isdir(OUTPUT_DIR):
         os.mkdir(OUTPUT_DIR)
 
