@@ -51,7 +51,7 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list, fname) -> l
     for inx in range(len(data)):
         try:
             audio_clip = mp.AudioFileClip(audiolist[inx])
-
+            
             img_clip = mp.ImageClip(data[inx]["image"]).set_position(IMAGE_POS)
             img_clip = img_clip.resize(height=IMAGE_HEIGHT)
             img_clip.duration = audio_clip.duration
@@ -59,7 +59,18 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list, fname) -> l
             img_clip = img_clip.fx(speedx, AUDIO_SPEED)
             img_clip = img_clip.fx(volumex, AUDIO_VOLUME)
 
-            text_clip = mp.TextClip(data[inx]["text"], font=FONT_NAME, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
+            if vert:
+                text_clip_duration = img_clip.duration / len(data[inx]["text"].split())
+                text_clips = []
+                for text in data[inx]["text"].split():
+                    text_clip = mp.TextClip(text, fontsize=70, font=FONT_ROBOTO, color='white', stroke_color="black", stroke_width=3, bg_color='transparent', method='label')
+                    text_clip.duration = text_clip_duration
+                    text_clip.fps = 1
+                    text_clips.append(text_clip)
+                text_clip = mp.concatenate_videoclips(text_clips)
+            else:
+                text_clip = mp.TextClip(data[inx]["text"], font=FONT_ROBOTO, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=TEXT_SIZE)
+
             text_clip = text_clip.set_position(TEXT_POS, relative=True)
 
             back_clip = back_clip.subclip(last_dur)
