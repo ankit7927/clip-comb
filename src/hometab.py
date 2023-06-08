@@ -10,8 +10,8 @@ class HomeUI:
     titlepath:str = None
     cate:str = None
     backpath:str = None
-    vert:bool = True
     title:bool = True
+    template:str = None
     data:list = []
     removable:list = []
 
@@ -62,9 +62,9 @@ class HomeUI:
         tk.Label(textframe, text="Select Number of text or type specific text id with ',' saparated").grid(padx=5, pady=5, row=0, sticky=tk.W)
 
         text_selection = [i for i in range(1, 15)]
-        self.text_count_select = ttk.Combobox(textframe, values=text_selection, width=40)
-        self.text_count_select.current(0)
-        self.text_count_select.grid(row=1, column=0, padx=5, pady=10, sticky=tk.W)
+        self.text_ids = ttk.Combobox(textframe, values=text_selection, width=40)
+        self.text_ids.current(0)
+        self.text_ids.grid(row=1, column=0, padx=5, pady=10, sticky=tk.W)
         
         def delete_callback():
             if delete_var.get() == 1: self.delete = True 
@@ -100,16 +100,15 @@ class HomeUI:
 
         tk.Button(buttonframe, text="Delete Category", command=self.deleteCategory).pack(padx=5, pady=4, fill=tk.X)
 
-        def change_orint(ori):
-            if ori == "Vertical" : self.vert = True
-            else : self.vert = False
-
         tk.Label(buttonframe, text="").pack(pady=20)
 
-        orient = ("Vertical", "Horizontal")
-        orient_var = tk.StringVar()
-        orient_var.set(orient[0])
-        video_ori = tk.OptionMenu(buttonframe, orient_var, command=lambda e:change_orint(e), *orient)
+        def change_orint(temp):
+            self.template = temp
+
+        tempates = ("v3", "vertical", "horizontal")
+        tempates_var = tk.StringVar()
+        tempates_var.set(tempates[0])
+        video_ori = tk.OptionMenu(buttonframe, tempates_var, command=lambda e:change_orint(e), *tempates)
         video_ori.config(width=15)
         video_ori.pack(padx=5, pady=5, fill=tk.X)
 
@@ -243,23 +242,20 @@ class HomeUI:
 
             self.data.append({"text":self.titleEntry.get(), "image":self.titlepath})
         
-        text_sele = self.text_count_select.get().split(",")
+        if self.text_ids.get() == "":
+            messagebox.showerror("Bad entry", "Text ids required")
+            return
+        text_ids = self.text_ids.get().split(",")
 
-        if len(text_sele) != 1:
-            for i in text_sele:
-                try:
-                    rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
-                    self.data.append({"text":rec[1], "image":rec[2]})
-                except Exception as e:  print(e)
-            self.removable= text_sele
-        else:
-            records = self.conn.execute(f"SELECT * FROM {self.cate}").fetchmany(int(self.text_count_select.get()))
-
-            for rec in records:
-                self.removable.append(rec[0])
+        for i in text_ids:
+            try:
+                print(self.cate, i)
+                rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
                 self.data.append({"text":rec[1], "image":rec[2]})
+            except Exception as e:  raise Exception(e)
+        self.removable= text_ids
 
-        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.vert, self.conn, self.delete, self.cate, self.removable))
+        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.template))
         thread.start()
 
         self.titlepath = None
