@@ -1,5 +1,17 @@
 import moviepy.editor as mp
 from moviepy.video.fx.crop import crop
+import requests
+from src.constants import TEMP_DIR, RANDOM_NAME
+
+
+def downloadImage(data:list) -> list:
+    list_imgs = []
+    for d in data:
+        temp_img = TEMP_DIR +RANDOM_NAME()+"."+d["image"].split(".")[-1]
+        with open(temp_img, "wb") as f:
+            f.write(requests.get(d["image"]).content)
+        list_imgs.append(temp_img)
+    return list_imgs
 
 def Crop16x9(backPath:str, clip:mp.VideoClip) -> mp.VideoClip:
     """Crop Horizontal Background Clip"""
