@@ -78,8 +78,6 @@ class HomeUI:
         selected_item = self.tree.selection()
         if selected_item:
             item = self.tree.item(selected_item, "values")
-            img = self.conn.execute(IMAGE_WITH_ID(self.cate, item[0])).fetchone()
-            os.remove(img[0])
             self.conn.execute(DELETE_ROW(self.cate, item[0]))
             self.loadCate(self.cate)
     
@@ -99,17 +97,8 @@ class HomeUI:
                 self.conn.execute(UPDATE_ROW_TEXT(self.cate), (text, item[0]))
 
                 if image_link != "":
-                    ext = img_link.get().split(".")[-1]
-                    filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
+                    self.conn.execute(UPDATE_ROW_IMAGE(self.cate), (image_link, item[0], ))
 
-                    try:
-                        os.remove(item[2])
-                        img_data = requests.get(image_link).content
-                        with open(filename, "wb") as file:
-                            file.write(img_data)
-                        self.conn.execute(UPDATE_ROW_IMAGE(self.cate), (filename, item[0], ))
-                    except Exception as e:
-                        raise(e)
                 root.destroy()
 
             root = tk.Toplevel(self.root)
@@ -128,8 +117,6 @@ class HomeUI:
     def removeOld(self):
         if self.delete:
             for i in self.removable:
-                fname = self.conn.execute(IMAGE_WITH_ID(self.cate, i)).fetchone()
-                os.remove(fname[0])
                 self.conn.execute(DELETE_ROW(self.cate, i))
             print("removed old")
 
@@ -171,10 +158,4 @@ class HomeUI:
         if self.cate is not None:
             res = messagebox.askyesno(f"Delete '{self.cate}'", f"are you sure to delete '{self.cate}'")
             if res:
-                try:
-                    list_imgs = self.conn.execute(ALL_IMAGE(self.cate)).fetchall()
-                    for img in list_imgs:   os.remove(img[0])
-                    self.conn.execute(DROP_TABLE(self.cate))
-                    self.quit()
-                except Exception as e:
-                    print(e)
+                self.conn.execute(DROP_TABLE(self.cate))

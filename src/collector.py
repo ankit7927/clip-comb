@@ -114,19 +114,7 @@ class Collector(tk.Tk):
         for data in fetchable:
             text = data["text"]
             image_url = data["img"]
-            ext = image_url.split(".")[-1]
-            filename = IMAGES_DIR + RANDOM_NAME() + "." + ext
 
-            try:
-                response = requests.get(image_url)
-                response.raise_for_status()
+            self.conn.execute(INSERT_TEXT_IMAGE(self.cate), (None, text, image_url))
 
-                with open(filename, "wb") as file:
-                    file.write(response.content)
-
-                self.conn.execute(INSERT_TEXT_IMAGE(self.cate), (None, text, filename))
-
-            except requests.exceptions.RequestException as e:
-                print("Error: Failed to download image:", e)
-            except Exception as e:
-                print("Error:", e)
+            

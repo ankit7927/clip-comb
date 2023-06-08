@@ -5,7 +5,6 @@ APP_NAME:str = "Clip-Combiner"
 DB_NAME:str="shorts.db"
 DB_DIR:str="db/"
 DB_PATH:str=DB_DIR+DB_NAME
-IMAGES_DIR:str="db/images/"
 FONT_ROBOTO:str="src/RobotoSlab-EB.ttf"
 TEMP_DIR:str="temp/"
 ZIP_NAME:str="db"

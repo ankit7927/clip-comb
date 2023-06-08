@@ -3,6 +3,7 @@ from moviepy.video.fx.crop import crop
 from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 import moviepy.video.fx.all as vfx
+from imageio import imread
 from src.constants import *
 
 FONT_PATH = "RobotoSlab-Medium.ttf"
@@ -51,8 +52,10 @@ def GenerateClip(data:list, backpath:str, vert:bool, audiolist:list, fname) -> l
     for inx in range(len(data)):
         try:
             audio_clip = mp.AudioFileClip(audiolist[inx])
+
+            image = imread(data[inx]["image"])
             
-            img_clip = mp.ImageClip(data[inx]["image"]).set_position(IMAGE_POS)
+            img_clip = mp.ImageClip(image).set_position(IMAGE_POS)
             img_clip = img_clip.resize(height=IMAGE_HEIGHT)
             img_clip.duration = audio_clip.duration
             img_clip = img_clip.set_audio(audio_clip)
