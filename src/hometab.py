@@ -249,7 +249,6 @@ class HomeUI:
 
         for i in text_ids:
             try:
-                print(self.cate, i)
                 rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
                 self.data.append({"text":rec[1], "image":rec[2]})
             except Exception as e:  raise Exception(e)

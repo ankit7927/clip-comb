@@ -1,7 +1,6 @@
 import moviepy.editor as mp
 from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
-import requests, tempfile
 from src.constants import *
 from src.utility import *
 
@@ -46,7 +45,6 @@ def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
         except Exception as e:
             print(e)
     
-    print(cliplist)
     final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(cliplist, method="compose")
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
 

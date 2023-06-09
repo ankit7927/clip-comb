@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-import requests
 from src.constants import *
 
 class Collector(tk.Tk):
