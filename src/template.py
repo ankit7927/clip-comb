@@ -86,3 +86,31 @@ def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
 
     back_clip.close()
+
+def tempV3(data:list, audiolist:list, fname):
+    list_imgs = downloadImage(data)
+    cliplist:list = []
+
+    for inx in range(len(data)):
+        audio_clip = mp.AudioFileClip(audiolist[inx])
+
+        main_image = CropInSquare(None, mp.ImageClip(list_imgs[inx]))
+        main_image.duration = audio_clip.duration
+        main_image = main_image.set_audio(audio_clip)
+        main_image = main_image.fx(speedx, AUDIO_SPEED)
+        main_image = main_image.fx(volumex, AUDIO_VOLUME)
+        main_image.fps = 1
+
+        cliplist.append(main_image)
+
+    title_image = mp.ImageClip("src/assets/title1.jpg")
+
+    main_image_clip = mp.concatenate_videoclips(cliplist, method="compose")
+
+    title_image = title_image.resize(width=main_image_clip.size[0])
+    
+    main_image_clip = main_image_clip.set_position((0, title_image.size[1]))
+
+    final_clip:mp.CompositeVideoClip = mp.CompositeVideoClip([title_image, main_image_clip], size=(title_image.w, title_image.h+main_image_clip.h))
+    final_clip.duration = main_image_clip.duration
+    final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))

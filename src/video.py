@@ -6,7 +6,10 @@ from src.template import *
 
 
 def GenerateClip(data:list, backpath:str, temp:str, audiolist:list, fname) -> list:
-    if temp == "vertical":
+    print(temp)
+    if temp == "v3":
+        tempV3(data=data, audiolist=audiolist, fname=fname)
+    elif temp == "vertical":
         tempV1_VERTICAL(data=data, backpath=backpath, audiolist=audiolist, fname=fname)
     elif temp == "horizontal":
         tempV1_HORIZONTAL(data=data, backpath=backpath, audiolist=audiolist, fname=fname)

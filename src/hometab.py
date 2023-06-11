@@ -59,11 +59,9 @@ class HomeUI:
         textframe = tk.LabelFrame(mainframe, text="Text")
         textframe.pack(padx=10, pady=5, fill=tk.X)
 
-        tk.Label(textframe, text="Select Number of text or type specific text id with ',' saparated").grid(padx=5, pady=5, row=0, sticky=tk.W)
+        tk.Label(textframe, text="Enter text ids with ',' saparated.").grid(padx=5, pady=5, row=0, sticky=tk.W)
 
-        text_selection = [i for i in range(1, 15)]
-        self.text_ids = ttk.Combobox(textframe, values=text_selection, width=40)
-        self.text_ids.current(0)
+        self.text_ids = tk.Entry(textframe, width=40)
         self.text_ids.grid(row=1, column=0, padx=5, pady=10, sticky=tk.W)
         
         def delete_callback():
@@ -102,13 +100,14 @@ class HomeUI:
 
         tk.Label(buttonframe, text="").pack(pady=20)
 
-        def change_orint(temp):
+        def change_template(temp):
             self.template = temp
 
         tempates = ("v3", "vertical", "horizontal")
         tempates_var = tk.StringVar()
         tempates_var.set(tempates[0])
-        video_ori = tk.OptionMenu(buttonframe, tempates_var, command=lambda e:change_orint(e), *tempates)
+        self.template = tempates[0]
+        video_ori = tk.OptionMenu(buttonframe, tempates_var, command=lambda e:change_template(e), *tempates)
         video_ori.config(width=15)
         video_ori.pack(padx=5, pady=5, fill=tk.X)
 
@@ -228,9 +227,6 @@ class HomeUI:
         if self.cate == None:
             messagebox.showerror("Bad Selection", "Category is required")
             return
-        elif self.backpath == None:
-            messagebox.showerror("Bad Selection", "Background is required")
-            return
         
         if self.title:
             if self.titleEntry.get() == "":
@@ -259,6 +255,5 @@ class HomeUI:
 
         self.titlepath = None
         self.titleEntry.delete(0, tk.END)
-        self.backpath = None
         self.data = []
         self.removable = []
