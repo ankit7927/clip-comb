@@ -3,6 +3,7 @@ from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 from src.constants import *
 from src.utility import *
+import os
 
 def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
     back_clip:mp.VideoClip = Crop9x16(backPath=backpath, clip=None)
@@ -97,10 +98,9 @@ def tempV3(data:list, audiolist:list, fname):
         main_image = main_image.set_audio(audio_clip)
         main_image = main_image.fx(speedx, AUDIO_SPEED)
         main_image = main_image.fx(volumex, AUDIO_VOLUME)
+        main_image = main_image.resize(height=400)
         main_image.fps = 1
 
-        if inx != 0:
-            cliplist.append(mp.VideoFileClip(COUNT_CLIP(inx)))
         cliplist.append(main_image)
 
     title_image = mp.ImageClip(f"{ASSESTS_DIR}title_1.jpg")
@@ -114,3 +114,6 @@ def tempV3(data:list, audiolist:list, fname):
     final_clip:mp.CompositeVideoClip = mp.CompositeVideoClip([title_image, main_image_clip], size=(title_image.w, title_image.h+main_image_clip.h))
     final_clip.duration = main_image_clip.duration
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
+
+    for f in list_imgs: os.remove(f)
+    for f in audiolist: os.remove(f)

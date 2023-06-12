@@ -2,20 +2,7 @@ import moviepy.editor as mp
 import moviepy.video.fx.all as vfx
 from src.utility import *
 from src.constants import *
-from src.template import *
 
-
-def GenerateClip(data:list, backpath:str, temp:str, audiolist:list, fname) -> list:
-    print(temp)
-    if temp == "v3":
-        tempV3(data=data, audiolist=audiolist, fname=fname)
-    elif temp == "vertical":
-        tempV1_VERTICAL(data=data, backpath=backpath, audiolist=audiolist, fname=fname)
-    elif temp == "horizontal":
-        tempV1_HORIZONTAL(data=data, backpath=backpath, audiolist=audiolist, fname=fname)
-    else:
-        print("unknown template selected")
-        return
 
 def ExtractClip(durations:list, videopath:str, audiopath:str, fname:str):
     video:mp.VideoClip = mp.VideoFileClip(videopath)
