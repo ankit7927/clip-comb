@@ -5,7 +5,8 @@ APP_NAME:str = "Clip-Combiner"
 DB_NAME:str="shorts.db"
 DB_DIR:str="db/"
 DB_PATH:str=DB_DIR+DB_NAME
-FONT_ROBOTO:str="src/assets/RobotoSlab-EB.ttf"
+ASSESTS_DIR:str = "src/assets/"
+FONT_ROBOTO:str=ASSESTS_DIR+"RobotoSlab-EB.ttf"
 TEMP_DIR:str="temp/"
 OUTPUT_DIR:str="output/"
 AUDIO_VOLUME:int=2
@@ -46,3 +47,4 @@ RANDOM_NAME:str = lambda: str(random.randint(10000000, 99999999))
 def TIME_STR_CONVERTER(time_string:str):
     time = datetime.strptime(time_string, "%H.%M.%S")
     return time.strftime("%H:%M:%S")
+COUNT_CLIP:str = lambda cnt: f"{ASSESTS_DIR}count{cnt}.mp4"

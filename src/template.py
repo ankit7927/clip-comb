@@ -32,7 +32,6 @@ def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
                 text_clips.append(text_clip)
             text_clip = mp.concatenate_videoclips(text_clips)
             
-
             text_clip = text_clip.set_position(VER_TEXT_POS, relative=True)
  
             back_clip = back_clip.subclip(last_dur)
@@ -56,7 +55,6 @@ def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
     
     cliplist:list = []
     last_dur:int = 0
-    
     
     for inx in range(len(data)):
         try:
@@ -101,9 +99,11 @@ def tempV3(data:list, audiolist:list, fname):
         main_image = main_image.fx(volumex, AUDIO_VOLUME)
         main_image.fps = 1
 
+        if inx != 0:
+            cliplist.append(mp.VideoFileClip(COUNT_CLIP(inx)))
         cliplist.append(main_image)
 
-    title_image = mp.ImageClip("src/assets/title1.jpg")
+    title_image = mp.ImageClip(f"{ASSESTS_DIR}title_1.jpg")
 
     main_image_clip = mp.concatenate_videoclips(cliplist, method="compose")
 
