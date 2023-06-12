@@ -30,11 +30,19 @@ AUDIO_FILE_TUP = ("Audio file", "*.mp3")
 IMAGE_FILE_TUP = ("Image files", "*.png *.jpg *.jpeg")
 ARCHIVE_FILE_TUP = ("Archive file", "*.zip")
 
-CREATE_TABLE:str = lambda cate : f"create table {cate} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)"
+LAST_SELECTED_TABLE_NAME:str = "last_selected"
+
+CREATE_LAST_SELECTED_TABLE:str = f"CREATE TABLE IF NOT EXISTS {LAST_SELECTED_TABLE_NAME} (category TEXT, id INTEGER)"
+UPDATE_LAST_SELECTED:str = f"UPDATE {LAST_SELECTED_TABLE_NAME} SET id=? WHERE category=?"
+INSERT_SELECTED:str = f"INSERT INTO {LAST_SELECTED_TABLE_NAME} VALUES (?, ?)"
+LAST_SELECTED_ID:str = f"SELECT id FROM {LAST_SELECTED_TABLE_NAME} WHERE category=?"
+
+CREATE_TABLE:str = lambda cate : f"CREATE TABLE IF NOT EXISTS {cate} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)"
 ALL_TABLE_QUERY:str = "select name from sqlite_master where type='table'"
 SEQUENCE_TABLE_NAME:str = "sqlite_sequence"
+
 INSERT_TEXT_IMAGE:str = lambda cate : f"INSERT INTO {cate} VALUES (?, ?, ?)"
-TEXT_ID_FROM_CATEGORY:str = lambda cate : f"select id, text from {cate}"
+TEXT_ID_FROM_CATEGORY:str = lambda cate : f"SELECT id, text FROM {cate}"
 TEXT_SELECTION_QUERY:str = lambda cate, id : f"SELECT * FROM {cate} WHERE id={id}"
 ALL_IMAGE:str = lambda cate : f"SELECT image from {cate}"
 IMAGE_WITH_ID:str = lambda cate, id : f"SELECT image from {cate} WHERE id={id}"

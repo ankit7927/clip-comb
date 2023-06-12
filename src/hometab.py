@@ -7,17 +7,14 @@ import threading
 
 
 class HomeUI:
-    titlepath:str = None
     cate:str = None
-    backpath:str = None
-    title:bool = True
-    template:str = None
     data:list = []
-    removable:list = []
-
     def __init__(self, tab, conn) -> None:
         self.conn = conn
         self.root = tab
+
+        self.conn.execute(CREATE_TABLE("titles"))
+        self.conn.execute(CREATE_LAST_SELECTED_TABLE)
 
         self.initUI()
 
@@ -25,7 +22,7 @@ class HomeUI:
         mainframe = tk.Frame(self.root)
         mainframe.pack(fill=tk.BOTH, side=tk.LEFT)
         self.tree = ttk.Treeview(mainframe, show="headings", selectmode="browse", columns=("id", "text"), height=11)
-        self.tree.pack(fill=tk.BOTH, padx=10, pady=10)
+        self.tree.pack(fill=tk.BOTH, padx=10, pady=10, expand=True)
 
         self.tree.column("id", width=40, stretch=False, minwidth=40)
         self.tree.column("text", width=600, stretch=False, minwidth=100)
@@ -35,45 +32,23 @@ class HomeUI:
         titleframe = tk.LabelFrame(mainframe, text="Title")
         titleframe.pack(padx=10, pady=5, fill=tk.X)
 
-        def switch_callback():
-            if switch_var.get() == 1: 
-                self.title = True
-                self.titleEntry.configure(state="normal") 
-                imageBtn.configure(state="normal")
-            else:   
-                self.title = False
-                self.titleEntry.configure(state="disabled") 
-                imageBtn.configure(state="disabled")
 
-        switch_var = tk.IntVar()
-        switch_var.set(1)
-        tk.Checkbutton(titleframe, text="Include Title", variable=switch_var, command=switch_callback).grid(padx=5, pady=5, row=0, sticky="w")
+        titles = self.conn.execute(TEXT_ID_FROM_CATEGORY("titles")).fetchall()
+        self.title_str = tk.StringVar(self.root)
 
-        self.titleEntry = tk.Entry(titleframe, width=80)
-        self.titleEntry.grid(padx=10, pady=5, row=1, column=0)
+        titleEntry = ttk.Combobox(titleframe, textvariable=self.title_str)
+        titleEntry.pack(padx=5, pady=10, fill=tk.X)
 
-        imageBtn = tk.Button(titleframe, text="Title Image", command=lambda:self.select_media(type="title"))
-        imageBtn.grid(padx=5, pady=5, row=1, column=1)
-        
+        titleEntry["values"] = titles
+        titleEntry.current()
 
         textframe = tk.LabelFrame(mainframe, text="Text")
-        textframe.pack(padx=10, pady=5, fill=tk.X)
+        textframe.pack(padx=10, pady=10, fill=tk.X)
 
-        tk.Label(textframe, text="Enter text ids with ',' saparated.").grid(padx=5, pady=5, row=0, sticky=tk.W)
+        tk.Label(textframe, text="Enter text ids with ',' saparated.").pack(anchor=tk.W)
 
         self.text_ids = tk.Entry(textframe, width=40)
-        self.text_ids.grid(row=1, column=0, padx=5, pady=10, sticky=tk.W)
-        
-        def delete_callback():
-            if delete_var.get() == 1: self.delete = True 
-            else:   self.delete = False
-
-        delete_var = tk.IntVar()
-        delete_var.set(1)
-        tk.Checkbutton(textframe, text="Delete Texts", variable=delete_var, command=delete_callback).grid(padx=10, pady=10, row=1, column=1)
-
-
-
+        self.text_ids.pack(padx=5, pady=10, fill=tk.X)
 
 
         buttonframe = tk.Frame(self.root)
@@ -85,6 +60,11 @@ class HomeUI:
         category_menu = tk.OptionMenu(buttonframe, category_var, command=lambda e:self.loadCate(e), *categories)
         category_menu.config(width=15)
         category_menu.pack(padx=5, pady=4, fill=tk.X)
+
+        self.last_selected_label = tk.Label(buttonframe)
+        self.last_selected_label.pack(padx=5, pady=4, fill=tk.X)
+
+        tk.Label(buttonframe).pack(pady=6)
 
         tk.Button(buttonframe, text="Delete Text", command=self.delete_item).pack(padx=5, pady=4, fill=tk.X)
 
@@ -98,24 +78,8 @@ class HomeUI:
 
         tk.Button(buttonframe, text="Delete Category", command=self.deleteCategory).pack(padx=5, pady=4, fill=tk.X)
 
-        tk.Label(buttonframe, text="").pack(pady=20)
-
-        def change_template(temp):
-            self.template = temp
-
-        tempates = ("v3", "vertical", "horizontal")
-        tempates_var = tk.StringVar()
-        tempates_var.set(tempates[0])
-        self.template = tempates[0]
-        video_ori = tk.OptionMenu(buttonframe, tempates_var, command=lambda e:change_template(e), *tempates)
-        video_ori.config(width=15)
-        video_ori.pack(padx=5, pady=5, fill=tk.X)
-
-        backBtn = tk.Button(buttonframe, text="Background", command=lambda:self.select_media(type="back"))
-        backBtn.pack(padx=5, pady=5, fill=tk.X)
-
         createBtn = tk.Button(buttonframe, text="Start Creating", command=self.prepareData)
-        createBtn.pack(padx=5, pady=30, fill=tk.X)
+        createBtn.pack(padx=5, pady=10, fill=tk.X, side=tk.BOTTOM)
 
 
 
@@ -123,8 +87,10 @@ class HomeUI:
         tables = self.conn.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
-        if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
+        elif tables.count((SEQUENCE_TABLE_NAME,)) > 0:
             tables.remove((SEQUENCE_TABLE_NAME,))
+        elif tables.count((LAST_SELECTED_TABLE_NAME,)) > 0:
+            tables.remove((LAST_SELECTED_TABLE_NAME,))
         return [table[0] for table in tables]
 
     def loadCate(self, cate) -> None:
@@ -137,6 +103,11 @@ class HomeUI:
             texts = self.conn.execute(TEXT_ID_FROM_CATEGORY(cate)).fetchall()
             for text in texts:
                 self.tree.insert("", tk.END, values=text)
+            try:
+                selected = self.conn.execute(LAST_SELECTED_ID, (self.cate, )).fetchall()[-1]
+                self.last_selected_label["text"] = "Last Sel. "+str(selected[0])
+            except Exception as e:
+                print(Exception(e))
 
     def delete_item(self) -> None:
         selected_item = self.tree.selection()
@@ -177,12 +148,6 @@ class HomeUI:
             tk.Button(root, text="Update", command=update).pack(padx=10, pady=10)
 
             root.mainloop()
-
-    def removeOld(self):
-        if self.delete:
-            for i in self.removable:
-                self.conn.execute(DELETE_ROW(self.cate, i))
-            print("removed old")
 
 
     def addCategory(self):
@@ -228,15 +193,17 @@ class HomeUI:
             messagebox.showerror("Bad Selection", "Category is required")
             return
         
-        if self.title:
-            if self.titleEntry.get() == "":
-                messagebox.showerror("Bad entry", "Title is required")
-                return
-            elif self.titlepath == None:
-                messagebox.showerror("Bad Selection", "Title image required")
-                return
+        title = self.title_str.get()
+        if title == "":
+            messagebox.showerror("Bad entry", "Title is required")
+            return
 
-            self.data.append({"text":self.titleEntry.get(), "image":self.titlepath})
+        img_link = self.conn.execute(IMAGE_WITH_ID("titles", title[0])).fetchone()
+        title = title.split("{")[1][:-1]
+
+        self.data.clear()
+
+        self.data.append({"text":title, "image":img_link[0]})
         
         if self.text_ids.get() == "":
             messagebox.showerror("Bad entry", "Text ids required")
@@ -248,12 +215,13 @@ class HomeUI:
                 rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
                 self.data.append({"text":rec[1], "image":rec[2]})
             except Exception as e:  raise Exception(e)
-        self.removable= text_ids
 
-        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.template))
+        thread = threading.Thread(target=lambda:create(data=self.data))
         thread.start()
 
-        self.titlepath = None
-        self.titleEntry.delete(0, tk.END)
-        self.data = []
-        self.removable = []
+        try:
+            self.conn.execute(UPDATE_LAST_SELECTED, (text_ids[-1], self.cate, ))
+        except Exception as e:
+            print(e)
+            self.conn.execute(INSERT_SELECTED, (self.cate, text_ids[-1], ))
+        self.conn.commit()
