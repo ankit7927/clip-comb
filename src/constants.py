@@ -5,8 +5,7 @@ APP_NAME:str = "Clip-Combiner"
 DB_NAME:str="shorts.db"
 DB_DIR:str="db/"
 DB_PATH:str=DB_DIR+DB_NAME
-ASSESTS_DIR:str = "src/assets/"
-FONT_ROBOTO:str=ASSESTS_DIR+"RobotoSlab-EB.ttf"
+FONT_ROBOTO:str="src/assets/RobotoSlab-M.ttf"
 TEMP_DIR:str="temp/"
 OUTPUT_DIR:str="output/"
 AUDIO_VOLUME:int=2
@@ -30,22 +29,16 @@ AUDIO_FILE_TUP = ("Audio file", "*.mp3")
 IMAGE_FILE_TUP = ("Image files", "*.png *.jpg *.jpeg")
 ARCHIVE_FILE_TUP = ("Archive file", "*.zip")
 
-LAST_SELECTED_TABLE_NAME:str = "last_selected"
-
-CREATE_LAST_SELECTED_TABLE:str = f"CREATE TABLE IF NOT EXISTS {LAST_SELECTED_TABLE_NAME} (category TEXT, id INTEGER)"
-UPDATE_LAST_SELECTED:str = f"UPDATE {LAST_SELECTED_TABLE_NAME} SET id=? WHERE category=?"
-INSERT_SELECTED:str = f"INSERT INTO {LAST_SELECTED_TABLE_NAME} VALUES (?, ?)"
-LAST_SELECTED_ID:str = f"SELECT id FROM {LAST_SELECTED_TABLE_NAME} WHERE category=?"
-
-CREATE_TABLE:str = lambda cate : f"CREATE TABLE IF NOT EXISTS {cate} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)"
-ALL_TABLE_QUERY:str = "select name from sqlite_master where type='table'"
+CREATE_TABLE:str = lambda cate : f"CREATE TABLE {cate} (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT, image TEXT)"
+ALL_TABLE_QUERY:str = "SELECT name FROM sqlite_master WHERE type='table'"
 SEQUENCE_TABLE_NAME:str = "sqlite_sequence"
-
 INSERT_TEXT_IMAGE:str = lambda cate : f"INSERT INTO {cate} VALUES (?, ?, ?)"
+RANDOM_TITLE:str = f"SELECT text, image FROM titles ORDER BY RANDOM() LIMIT 1"
 TEXT_ID_FROM_CATEGORY:str = lambda cate : f"SELECT id, text FROM {cate}"
-TEXT_SELECTION_QUERY:str = lambda cate, id : f"SELECT * FROM {cate} WHERE id={id}"
-ALL_IMAGE:str = lambda cate : f"SELECT image from {cate}"
-IMAGE_WITH_ID:str = lambda cate, id : f"SELECT image from {cate} WHERE id={id}"
+TEXT_IMAGE_FROM_CATEGORY:str = lambda cate : f"SELECT text, image FROM {cate}"
+TEXT_SELECTION_QUERY:str = lambda cate: f"SELECT * FROM {cate} WHERE id=?"
+ALL_IMAGE:str = lambda cate : f"SELECT image FROM {cate}"
+IMAGE_WITH_ID:str = lambda cate, id : f"SELECT image FROM {cate} WHERE id={id}"
 DELETE_ROW:str = lambda cate, id : f"DELETE FROM {cate} WHERE id={id}"
 UPDATE_ROW_TEXT:str = lambda cate : f"UPDATE {cate} SET text=? WHERE id=?"
 UPDATE_ROW_IMAGE:str = lambda cate : f"UPDATE {cate} SET image=? WHERE id=?"
@@ -55,4 +48,3 @@ RANDOM_NAME:str = lambda: str(random.randint(10000000, 99999999))
 def TIME_STR_CONVERTER(time_string:str):
     time = datetime.strptime(time_string, "%H.%M.%S")
     return time.strftime("%H:%M:%S")
-COUNT_CLIP:str = lambda cnt: f"{ASSESTS_DIR}count{cnt}.mp4"

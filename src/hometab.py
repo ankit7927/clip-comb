@@ -3,18 +3,17 @@ from tkinter import ttk, messagebox, filedialog
 from src.constants import *
 from src.collector import Collector
 from src.creater import create
-import threading
+import threading, sys
 
 
 class HomeUI:
     cate:str = None
+    backpath:str = None
     data:list = []
+
     def __init__(self, tab, conn) -> None:
         self.conn = conn
         self.root = tab
-
-        self.conn.execute(CREATE_TABLE("titles"))
-        self.conn.execute(CREATE_LAST_SELECTED_TABLE)
 
         self.initUI()
 
@@ -22,7 +21,7 @@ class HomeUI:
         mainframe = tk.Frame(self.root)
         mainframe.pack(fill=tk.BOTH, side=tk.LEFT)
         self.tree = ttk.Treeview(mainframe, show="headings", selectmode="browse", columns=("id", "text"), height=11)
-        self.tree.pack(fill=tk.BOTH, padx=10, pady=10, expand=True)
+        self.tree.pack(fill=tk.BOTH, padx=10, pady=10)
 
         self.tree.column("id", width=40, stretch=False, minwidth=40)
         self.tree.column("text", width=600, stretch=False, minwidth=100)
@@ -32,25 +31,33 @@ class HomeUI:
         titleframe = tk.LabelFrame(mainframe, text="Title")
         titleframe.pack(padx=10, pady=5, fill=tk.X)
 
+        def switch_callback():
+            if self.random_var.get():  
+                titleEntry.configure(state="disabled") 
+            else:   
+                titleEntry.configure(state="normal") 
 
-        titles = self.conn.execute(TEXT_ID_FROM_CATEGORY("titles")).fetchall()
+        self.random_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(titleframe, text="Random Title", variable=self.random_var, command=switch_callback).pack(padx=5, pady=5, anchor="w")
+
+        titles = self.conn.execute(TEXT_IMAGE_FROM_CATEGORY("titles")).fetchall()
         self.title_str = tk.StringVar(self.root)
 
         titleEntry = ttk.Combobox(titleframe, textvariable=self.title_str)
-        titleEntry.pack(padx=5, pady=10, fill=tk.X)
+        titleEntry.pack(padx=10, pady=10, fill=tk.X)
 
         titleEntry["values"] = titles
-        titleEntry.current()
-
+        
         textframe = tk.LabelFrame(mainframe, text="Text")
-        textframe.pack(padx=10, pady=10, fill=tk.X)
+        textframe.pack(padx=10, pady=5, fill=tk.X)
 
-        tk.Label(textframe, text="Enter text ids with ',' saparated.").pack(anchor=tk.W)
+        tk.Label(textframe, text="Enter text id with ',' saparated.").pack(padx=5, pady=5, anchor=tk.W)
 
-        self.text_ids = tk.Entry(textframe, width=40)
-        self.text_ids.pack(padx=5, pady=10, fill=tk.X)
-
-
+        text_selection = [i for i in range(1, 15)]
+        self.text_ids = ttk.Combobox(textframe, values=text_selection, width=40)
+        self.text_ids.current(0)
+        self.text_ids.pack(padx=10, pady=10, fill=tk.X)
+        
         buttonframe = tk.Frame(self.root)
         buttonframe.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT)
 
@@ -60,11 +67,6 @@ class HomeUI:
         category_menu = tk.OptionMenu(buttonframe, category_var, command=lambda e:self.loadCate(e), *categories)
         category_menu.config(width=15)
         category_menu.pack(padx=5, pady=4, fill=tk.X)
-
-        self.last_selected_label = tk.Label(buttonframe)
-        self.last_selected_label.pack(padx=5, pady=4, fill=tk.X)
-
-        tk.Label(buttonframe).pack(pady=6)
 
         tk.Button(buttonframe, text="Delete Text", command=self.delete_item).pack(padx=5, pady=4, fill=tk.X)
 
@@ -78,19 +80,30 @@ class HomeUI:
 
         tk.Button(buttonframe, text="Delete Category", command=self.deleteCategory).pack(padx=5, pady=4, fill=tk.X)
 
+        tk.Label(buttonframe, text="").pack(pady=20)
+
+        def change_orint(temp):
+            self.template = temp
+
+        orientations = ("vertical", "horizontal")
+        self.orientation = tk.StringVar()
+        self.orientation.set(orientations[0])
+        video_ori = tk.OptionMenu(buttonframe, self.orientation, command=lambda e:change_orint(e), *orientations)
+        video_ori.config(width=15)
+        video_ori.pack(padx=5, pady=5, fill=tk.X)
+
+        backBtn = tk.Button(buttonframe, text="Background", command=lambda:self.select_media(type="back"))
+        backBtn.pack(padx=5, pady=5, fill=tk.X)
+
         createBtn = tk.Button(buttonframe, text="Start Creating", command=self.prepareData)
-        createBtn.pack(padx=5, pady=10, fill=tk.X, side=tk.BOTTOM)
-
-
+        createBtn.pack(padx=5, pady=30, fill=tk.X)
 
     def getCategory(self) -> list:
         tables = self.conn.execute(ALL_TABLE_QUERY).fetchall()
         if len(tables) == 0:
             return ["#None"]
-        elif tables.count((SEQUENCE_TABLE_NAME,)) > 0:
+        if tables.count((SEQUENCE_TABLE_NAME,)) > 0:
             tables.remove((SEQUENCE_TABLE_NAME,))
-        elif tables.count((LAST_SELECTED_TABLE_NAME,)) > 0:
-            tables.remove((LAST_SELECTED_TABLE_NAME,))
         return [table[0] for table in tables]
 
     def loadCate(self, cate) -> None:
@@ -103,11 +116,6 @@ class HomeUI:
             texts = self.conn.execute(TEXT_ID_FROM_CATEGORY(cate)).fetchall()
             for text in texts:
                 self.tree.insert("", tk.END, values=text)
-            try:
-                selected = self.conn.execute(LAST_SELECTED_ID, (self.cate, )).fetchall()[-1]
-                self.last_selected_label["text"] = "Last Sel. "+str(selected[0])
-            except Exception as e:
-                print(Exception(e))
 
     def delete_item(self) -> None:
         selected_item = self.tree.selection()
@@ -149,7 +157,6 @@ class HomeUI:
 
             root.mainloop()
 
-
     def addCategory(self):
         root = tk.Toplevel(self.root)
         root.title("Create New Category")
@@ -186,25 +193,34 @@ class HomeUI:
             self.titlepath = filedialog.askopenfilename(title="Select Image", filetypes=filetypes)
         else:
             raise NotImplementedError(f"Unsupported media type: {type}")
-        
+
+
 
     def prepareData(self):
         if self.cate == None:
             messagebox.showerror("Bad Selection", "Category is required")
             return
-        
-        title = self.title_str.get()
-        if title == "":
-            messagebox.showerror("Bad entry", "Title is required")
+        elif self.backpath == None:
+            messagebox.showerror("Bad Selection", "Background is required")
             return
 
-        img_link = self.conn.execute(IMAGE_WITH_ID("titles", title[0])).fetchone()
-        title = title.split("{")[1][:-1]
+        raw_title = self.title_str.get()
+        if raw_title == "" and not self.random_var:
+            messagebox.showerror("Bad entry", "Title is required")
+            return
+        elif self.random_var:
+            temp = self.conn.execute(RANDOM_TITLE).fetchone()
+            title = temp[0]
+            imglink = temp[1]
+        else:
+            raw_title = raw_title.split("} ")
+            title = raw_title[0].replace("{", '')
+            imglink = raw_title[1]
 
         self.data.clear()
 
-        self.data.append({"text":title, "image":img_link[0]})
-        
+        self.data.append({"text":title, "image":imglink})
+
         if self.text_ids.get() == "":
             messagebox.showerror("Bad entry", "Text ids required")
             return
@@ -212,16 +228,12 @@ class HomeUI:
 
         for i in text_ids:
             try:
-                rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, i)).fetchone()
+                rec = self.conn.execute(TEXT_SELECTION_QUERY(self.cate), (i, )).fetchone()
                 self.data.append({"text":rec[1], "image":rec[2]})
             except Exception as e:  raise Exception(e)
 
-        thread = threading.Thread(target=lambda:create(data=self.data))
+        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.orientation))
         thread.start()
 
-        try:
-            self.conn.execute(UPDATE_LAST_SELECTED, (text_ids[-1], self.cate, ))
-        except Exception as e:
-            print(e)
-            self.conn.execute(INSERT_SELECTED, (self.cate, text_ids[-1], ))
-        self.conn.commit()
+        self.title_str.delete(0, tk.END)
+        self.backpath = None

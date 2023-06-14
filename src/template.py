@@ -3,7 +3,6 @@ from moviepy.video.fx.all import speedx
 from moviepy.audio.fx.volumex import volumex
 from src.constants import *
 from src.utility import *
-import os
 
 def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
     back_clip:mp.VideoClip = Crop9x16(backPath=backpath, clip=None)
@@ -23,16 +22,7 @@ def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
             img_clip = img_clip.fx(speedx, AUDIO_SPEED)
             img_clip = img_clip.fx(volumex, AUDIO_VOLUME)
 
-
-            text_clip_duration = img_clip.duration / len(data[inx]["text"].split())
-            text_clips = []
-            for text in data[inx]["text"].split():
-                text_clip = mp.TextClip(text, fontsize=70, font=FONT_ROBOTO, color='white', stroke_color="black", stroke_width=3, bg_color='transparent', method='label')
-                text_clip.duration = text_clip_duration
-                text_clip.fps = 1
-                text_clips.append(text_clip)
-            text_clip = mp.concatenate_videoclips(text_clips)
-            
+            text_clip = mp.TextClip(data[inx]["text"], font=FONT_ROBOTO, fontsize=35, color='white', bg_color='transparent', align='center', method='caption', size=VER_TEXT_SIZE)
             text_clip = text_clip.set_position(VER_TEXT_POS, relative=True)
  
             back_clip = back_clip.subclip(last_dur)
@@ -56,6 +46,7 @@ def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
     
     cliplist:list = []
     last_dur:int = 0
+    
     
     for inx in range(len(data)):
         try:
@@ -85,35 +76,3 @@ def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
 
     back_clip.close()
-
-def tempV3(data:list, audiolist:list, fname):
-    list_imgs = downloadImage(data)
-    cliplist:list = []
-
-    for inx in range(len(data)):
-        audio_clip = mp.AudioFileClip(audiolist[inx])
-
-        main_image = CropInSquare(None, mp.ImageClip(list_imgs[inx]))
-        main_image.duration = audio_clip.duration
-        main_image = main_image.set_audio(audio_clip)
-        main_image = main_image.fx(speedx, AUDIO_SPEED)
-        main_image = main_image.fx(volumex, AUDIO_VOLUME)
-        main_image = main_image.resize(height=400)
-        main_image.fps = 1
-
-        cliplist.append(main_image)
-
-    title_image = mp.ImageClip(f"{ASSESTS_DIR}title_1.jpg")
-
-    main_image_clip = mp.concatenate_videoclips(cliplist, method="compose")
-
-    title_image = title_image.resize(width=main_image_clip.size[0])
-    
-    main_image_clip = main_image_clip.set_position((0, title_image.size[1]))
-
-    final_clip:mp.CompositeVideoClip = mp.CompositeVideoClip([title_image, main_image_clip], size=(title_image.w, title_image.h+main_image_clip.h))
-    final_clip.duration = main_image_clip.duration
-    final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
-
-    for f in list_imgs: os.remove(f)
-    for f in audiolist: os.remove(f)
