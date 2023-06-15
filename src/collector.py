@@ -95,13 +95,13 @@ class Collector(tk.Tk):
             self.button_entry.clear()
             for d in text_list:
                 tempFrame = tk.Frame(self.frame)
-                tempFrame.pack(padx=10, pady=10, expand=True)
+                tempFrame.pack(padx=10, pady=10, fill=tk.X)
 
                 btn = tk.Button(tempFrame, text=d, command=lambda d=d: self.copy_to_clip(d), width=100)
-                btn.pack(padx=10, pady=5)
+                btn.pack(padx=10, pady=5, fill=tk.X, expand=True)
 
                 ent = tk.Entry(tempFrame)
-                ent.pack(padx=10, pady=5, fill="x")
+                ent.pack(padx=10, pady=5, fill=tk.X, expand=True)
 
                 self.button_entry.append((btn, ent, d))
             top.destroy()
@@ -115,5 +115,6 @@ class Collector(tk.Tk):
             image_url = data["img"]
 
             self.conn.execute(INSERT_TEXT_IMAGE(self.cate), (None, text, image_url))
+        self.conn.commit()
 
             

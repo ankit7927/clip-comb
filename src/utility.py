@@ -4,7 +4,7 @@ import requests
 from src.constants import TEMP_DIR, RANDOM_NAME
 
 
-def downloadImage(data:list) -> list:
+def DownloadImage(data:list) -> list:
     list_imgs = []
     for d in data:
         temp_img = TEMP_DIR +RANDOM_NAME()+"."+d["image"].split(".")[-1]

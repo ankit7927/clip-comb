@@ -4,9 +4,8 @@ from moviepy.audio.fx.volumex import volumex
 from src.constants import *
 from src.utility import *
 
-def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
+def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, imagelist:list, fname):
     back_clip:mp.VideoClip = Crop9x16(backPath=backpath, clip=None)
-    list_imgs = downloadImage(data)
 
     cliplist:list = []
     last_dur:int = 0
@@ -15,7 +14,7 @@ def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
         try:
             audio_clip = mp.AudioFileClip(audiolist[inx])
 
-            img_clip = mp.ImageClip(list_imgs[inx]).set_position(VER_IMAGE_POS)
+            img_clip = mp.ImageClip(imagelist[inx]).set_position(VER_IMAGE_POS)
             img_clip = img_clip.resize(height=VER_IMAGE_HEIGHT)
             img_clip.duration = audio_clip.duration
             img_clip = img_clip.set_audio(audio_clip)
@@ -40,10 +39,9 @@ def tempV1_VERTICAL(data:list, backpath:str, audiolist:list, fname):
 
     back_clip.close()
 
-def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
+def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, imagelist:list, fname):
     back_clip:mp.VideoClip = Crop16x9(backPath=backpath, clip=None)
-    list_imgs = downloadImage(data)
-    
+
     cliplist:list = []
     last_dur:int = 0
     
@@ -52,7 +50,7 @@ def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
         try:
             audio_clip = mp.AudioFileClip(audiolist[inx])
 
-            img_clip = mp.ImageClip(list_imgs[inx]).set_position(HOR_IMAGE_POS)
+            img_clip = mp.ImageClip(imagelist[inx]).set_position(HOR_IMAGE_POS)
             img_clip = img_clip.resize(height=HOR_IMAGE_HEIGHT)
             img_clip.duration = audio_clip.duration
             img_clip = img_clip.set_audio(audio_clip)
@@ -72,6 +70,9 @@ def tempV1_HORIZONTAL(data:list, backpath:str, audiolist:list, fname):
         except Exception as e:
             print(e)
     
+    for i in cliplist: i.close()
+    for i in audiolist: i.close()
+
     final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(cliplist, method="compose")
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
 

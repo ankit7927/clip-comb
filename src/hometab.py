@@ -53,10 +53,9 @@ class HomeUI:
 
         tk.Label(textframe, text="Enter text id with ',' saparated.").pack(padx=5, pady=5, anchor=tk.W)
 
-        text_selection = [i for i in range(1, 15)]
-        self.text_ids = ttk.Combobox(textframe, values=text_selection, width=40)
-        self.text_ids.current(0)
-        self.text_ids.pack(padx=10, pady=10, fill=tk.X)
+        self.text_id_var = tk.StringVar()
+        text_id = tk.Entry(textframe, textvariable=self.text_id_var)
+        text_id.pack(padx=10, pady=10, fill=tk.X)
         
         buttonframe = tk.Frame(self.root)
         buttonframe.pack(fill=tk.BOTH, expand=True, side=tk.RIGHT)
@@ -128,7 +127,7 @@ class HomeUI:
         selected_item = self.tree.selection()
         if selected_item:
             itemID = self.tree.item(selected_item, "values")[0]
-            item = self.conn.execute(TEXT_SELECTION_QUERY(self.cate, itemID)).fetchone()
+            item = self.conn.execute(TEXT_SELECTION_QUERY(self.cate), (itemID, )).fetchone()
 
             def update():
                 text = text_entry.get()
@@ -141,7 +140,8 @@ class HomeUI:
 
                 if image_link != "":
                     self.conn.execute(UPDATE_ROW_IMAGE(self.cate), (image_link, item[0], ))
-
+                    
+                self.conn.commit()
                 root.destroy()
 
             root = tk.Toplevel(self.root)
@@ -221,10 +221,10 @@ class HomeUI:
 
         self.data.append({"text":title, "image":imglink})
 
-        if self.text_ids.get() == "":
+        if self.text_id_var.get() == "":
             messagebox.showerror("Bad entry", "Text ids required")
             return
-        text_ids = self.text_ids.get().split(",")
+        text_ids = self.text_id_var.get().split(",")
 
         for i in text_ids:
             try:
@@ -232,8 +232,5 @@ class HomeUI:
                 self.data.append({"text":rec[1], "image":rec[2]})
             except Exception as e:  raise Exception(e)
 
-        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.orientation))
+        thread = threading.Thread(target=create, args=(self.data, self.backpath, self.orientation.get()))
         thread.start()
-
-        self.title_str.delete(0, tk.END)
-        self.backpath = None

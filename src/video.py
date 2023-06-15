@@ -5,9 +5,9 @@ from src.constants import *
 from src.template import *
 
 
-def GenerateClip(data:list, backpath:str, temp:str, audiolist:list, fname) -> list:
+def GenerateClip(data:list, backpath:str, temp:str, audiolist:list, imagelist, fname) -> list:
     if temp == "vertical":
-        tempV1_VERTICAL(data=data, backpath=backpath, audiolist=audiolist, fname=fname)
+        tempV1_VERTICAL(data=data, backpath=backpath, audiolist=audiolist, imagelist=imagelist, fname=fname)
     elif temp == "horizontal":
         tempV1_HORIZONTAL(data=data, backpath=backpath, audiolist=audiolist, fname=fname)
     else:

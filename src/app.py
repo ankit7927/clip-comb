@@ -21,13 +21,13 @@ class ClipComb(tk.Tk):
         notebook.pack(expand=True, fill="both")
 
         tab1 = tk.ttk.Frame(notebook)
-        tab3 = tk.ttk.Frame(notebook)
+        tab2 = tk.ttk.Frame(notebook)
 
-        notebook.add(tab1, text="Home")
-        notebook.add(tab3, text="Extractor")
+        notebook.add(tab1, text="Shorts")
+        notebook.add(tab2, text="Extractor")
 
         HomeUI(tab1, self.conn)
-        Extractor(tab3)
+        Extractor(tab2)
 
         self.mainloop()
         self.conn.commit()
