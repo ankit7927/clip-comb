@@ -30,7 +30,7 @@ def ExtractClip(durations:list, videopath:str, audiopath:str, fname:str):
         except Exception as e:
             print(e)
 
-    final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(clips, method="chain")
+    final_clip:mp.CompositeVideoClip = mp.concatenate_videoclips(clips, method="compose")
     final_clip.write_videofile(FINAL_CLIP_NAME(fname[:99]))
 
     video.close()
