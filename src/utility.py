@@ -5,13 +5,19 @@ from src.constants import TEMP_DIR, RANDOM_NAME
 
 
 def DownloadImage(data:list) -> list:
-    list_imgs = []
-    for d in data:
-        temp_img = TEMP_DIR +RANDOM_NAME()+"."+d["image"].split(".")[-1]
-        with open(temp_img, "wb") as f:
-            f.write(requests.get(d["image"]).content)
-        list_imgs.append(temp_img)
-    return list_imgs
+    list_imgs:list = []
+    new_data:list = []
+    for inx, d in enumerate(data):
+        print(f"Downloading image {inx+1}")
+        try:
+            temp_img = TEMP_DIR +RANDOM_NAME()+"."+d["image"].split(".")[-1]
+            with open(temp_img, "wb") as f:
+                f.write(requests.get(d["image"]).content)
+            list_imgs.append(temp_img)
+            new_data.append(d)
+        except Exception as e:
+            print(e)
+    return new_data, list_imgs
 
 def Crop16x9(backPath:str, clip:mp.VideoClip) -> mp.VideoClip:
     """Crop Horizontal Background Clip"""
