@@ -1,4 +1,4 @@
-# Python Shorts Maker
+# Python Clip Combiner
 
 A python script to make short videos.
 
